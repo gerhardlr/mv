@@ -1,0 +1,4 @@
+requests
+pylint
+aiohttp
+ipython
