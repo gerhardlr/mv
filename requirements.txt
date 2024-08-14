@@ -1,5 +1,0 @@
-requests
-pylint
-aiohttp
-ipython
-assertpy
