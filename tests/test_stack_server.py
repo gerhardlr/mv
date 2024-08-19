@@ -1,5 +1,4 @@
 from threading import Event
-from time import sleep
 
 from assertpy import assert_that
 import pytest

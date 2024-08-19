@@ -1,13 +1,56 @@
-import abc
-import asyncio
-from contextlib import asynccontextmanager
-from queue import Empty
-import queue
 from assertpy import assert_that
 import pytest
 import pytest_asyncio
+from contextlib import asynccontextmanager
+from fastapi.testclient import TestClient
 import websockets
+import abc
+import queue
 import logging
+import asyncio
+import requests
+
+from mv.fast_api_server import app
+
+class RealClient(TestClient):
+
+    base_url = "http://127.0.0.1:8000/"
+
+    def __init__(self):
+        pass
+
+    def get(self,path):
+        return requests.get(f"{self.base_url}{path}")
+
+    def post(self, path: str, **kwargs):
+        return requests.post(f"{self.base_url}{path}", **kwargs)
+
+class Proxy:
+
+    def __init__(self, client: TestClient) -> None:
+        self._client = client
+
+    def command_on(self,delay: float | None = None):
+        json = {"delay": delay} if delay else delay
+        result = self._client.post("switch_on",json = json)
+        assert_that(result.status_code).is_equal_to(200)
+
+    def command_off(self,delay: float | None = None):
+        json = {"delay": delay} if delay else delay
+        result = self._client.post("switch_off",json = json)
+        assert_that(result.status_code).is_equal_to(200)
+
+    async def async_command_on(self,delay: float | None = None):
+        await asyncio.to_thread(self.command_on, delay)
+
+    async def async_command_off(self,delay: float | None = None):
+        await asyncio.to_thread(self.command_off, delay)
+
+    @property
+    def state(self):
+        result = self._client.get("state")
+        assert_that(result.status_code).is_equal_to(200)
+        return result.json()
 
 logger = logging.getLogger()
 
@@ -86,7 +129,7 @@ class WSListener:
             while True:
                 try:
                     message = await websocket.recv()
-                except Exception as exception:
+                except Exception:
                     return
                 await asyncio.to_thread(self._observer.push_event, message)
 
@@ -94,6 +137,19 @@ class WSListener:
 class Settings:
 
     use_mock_ws = True
+    client = TestClient(app)
+
+@pytest.fixture(name="use_real_server")
+def fxt_use_real_server(settings: Settings):
+    settings.client = RealClient()
+
+@pytest.fixture(name="client")
+def fxt_client(settings: Settings):
+    return settings.client
+
+@pytest.fixture(name="proxy")
+def fxt_proxy(client):
+    return Proxy(client)
 
 
 @pytest.fixture(name="settings")
@@ -106,15 +162,8 @@ async def fxt_websocket(settings: Settings):
     if settings.use_mock_ws:
         yield get_mock_ws_server()
     else:
-        async with websockets.connect("ws://localhost:8765") as websocket:
+        async with websockets.connect("ws://localhost:8000") as websocket:
             yield websocket
-
-
-async def execute(websocket: websockets.WebSocketClientProtocol | MockWSServer):
-    tx_message = "ON"
-    await websocket.send(tx_message)
-    rx_message = await websocket.recv()
-    assert_that(rx_message).is_equal_to(tx_message)
 
 
 @pytest.fixture(name="use_ws_server")
@@ -136,24 +185,3 @@ async def fxt_listening(
     task = asyncio.create_task(listener.listen())
     yield websocket
     await websocket.close()
-
-
-@pytest.mark.asyncio
-@pytest.mark.usefixtures("use_ws_server")
-async def test_ws_server(websocket: websockets.WebSocketClientProtocol):
-    await execute(websocket)
-
-
-@pytest.mark.asyncio
-async def test_ws_local(websocket: MockWSServer):
-    await execute(websocket)
-
-
-@pytest.mark.asyncio
-async def test_listening(listening: MockWSServer, observer: Observer):
-    websocket = listening
-    tx_message = "ON"
-    await websocket.send(tx_message)
-    await asyncio.sleep(0.0001)
-    rx_message = observer.message.get()
-    assert_that(rx_message).is_equal_to(tx_message)

@@ -46,7 +46,7 @@ async def server_routine(websocket):
 
 
 async def main():
-    async with serve(server_routine, "localhost", 8765):
+    async with serve(server_routine, "localhost", 8000):
         await asyncio.Future()  # run forever
 
 def server():

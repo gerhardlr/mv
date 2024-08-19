@@ -1,5 +1,6 @@
 import abc
-from contextlib import contextmanager
+import asyncio
+from contextlib import contextmanager, asynccontextmanager
 from queue import Queue
 from threading import Event, Lock, Thread
 from copy import deepcopy
@@ -11,6 +12,7 @@ _state = {}
 _state_control_signals = Queue[Literal["STOP","STATE_CHANGED"]]()
 
 _state_write_lock = Lock()
+_async_state_write_lock = asyncio.Lock()
 
 _self_publishing = Event()
 
@@ -41,12 +43,29 @@ def update_state():
         _state = state
         cntrl_set_state_changed()
 
+def state_machine_is_busy() -> bool:
+    return _async_state_write_lock.locked()
+
+@asynccontextmanager
+async def async_update_state():
+    # only one thread at a time can write or update the state
+    # after a write, a signal is sent indicating the state has changed
+    # once the signal is sent the update state lock is released
+    global _state
+    async with _async_state_write_lock:
+        state = deepcopy(_state)
+        # we copy the state so that it can be red statically whilst being updated
+        yield state
+        _state = state
+        cntrl_set_state_changed()
+
 
 class AbstractPublisher:
 
     @abc.abstractmethod
     def publish(self, state):
         """"""
+
 
 class StateServer():
 
@@ -75,6 +94,7 @@ class StateServer():
         cntrl_set_server_stop()
         if self._server_thread:
             self._server_thread.join(1)
+
 
 @contextmanager
 def state_server(publisher: AbstractPublisher):
