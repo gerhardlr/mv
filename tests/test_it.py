@@ -111,7 +111,7 @@ async def fxt_websocket(settings: Settings):
 
 
 async def execute(websocket: websockets.WebSocketClientProtocol | MockWSServer):
-    tx_message = "Hello world!"
+    tx_message = "ON"
     await websocket.send(tx_message)
     rx_message = await websocket.recv()
     assert_that(rx_message).is_equal_to(tx_message)
@@ -152,7 +152,7 @@ async def test_ws_local(websocket: MockWSServer):
 @pytest.mark.asyncio
 async def test_listening(listening: MockWSServer, observer: Observer):
     websocket = listening
-    tx_message = "Hello world!"
+    tx_message = "ON"
     await websocket.send(tx_message)
     await asyncio.sleep(0.0001)
     rx_message = observer.message.get()
