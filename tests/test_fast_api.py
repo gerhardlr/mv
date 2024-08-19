@@ -4,16 +4,11 @@ import pytest
 from fastapi.testclient import TestClient
 import websockets
 
-from .conftest import Proxy, MockWSServer, Observer
+from .helpers import Proxy, MockWSServer, MessageObserver
 
 
 def test_get(proxy: Proxy):
-    assert_that(proxy.state).is_none()
-
-@pytest.mark.usefixtures("use_real_server")
-def test_get_real(proxy:Proxy):
-    assert_that(proxy.state).is_none()
-    
+    assert_that(proxy.state).is_none()    
 
 def test_post_on(proxy: Proxy):
     proxy.command_on(delay=1)
@@ -46,7 +41,6 @@ async def test_command_twice(proxy: Proxy):
         await task1
         await task2
 
-
 @pytest.mark.asyncio
 @pytest.mark.usefixtures("use_ws_server")
 async def test_ws_server(websocket: websockets.WebSocketClientProtocol):
@@ -59,18 +53,29 @@ async def test_ws_server(websocket: websockets.WebSocketClientProtocol):
 @pytest.mark.usefixtures("use_ws_server")
 @pytest.mark.usefixtures("use_real_server")
 async def test_ws_server_with_command(
-    websocket: websockets.WebSocketClientProtocol,
     proxy: Proxy
 ):
-    #tx_message = ""
-    #await websocket.send(tx_message)
-    #rx_message = await websocket.recv()
-    #assert_that(rx_message).is_equal_to(tx_message)
     await proxy.async_command_on()
-    rx_message = await websocket.recv()
-    assert_that(rx_message).is_equal_to("ON")
+    new_state = await proxy.async_wait_for_state_to_change()
+    assert_that(new_state).is_equal_to("ON")
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures("use_ws_server")
+@pytest.mark.usefixtures("use_real_server")
+async def test_ws_server_with_background_command(
+    proxy: Proxy
+):
+    proxy.command_on_background()
+    new_state = await proxy.async_wait_for_state_to_change()
+    assert_that(new_state).is_equal_to("ON")
 
 
+def test_server_with_background_command(
+    proxy: Proxy
+):
+    proxy.command_on_background()
+    new_state = proxy.wait_for_state_to_change()
+    assert_that(new_state).is_equal_to("ON")
 
 @pytest.mark.asyncio
 async def test_ws_local(websocket: MockWSServer):
@@ -82,7 +87,7 @@ async def test_ws_local(websocket: MockWSServer):
 
 
 @pytest.mark.asyncio
-async def test_listening(listening: MockWSServer, observer: Observer):
+async def test_listening(listening: MockWSServer, observer: MessageObserver):
     websocket = listening
     tx_message = "ON"
     await websocket.send(tx_message)
