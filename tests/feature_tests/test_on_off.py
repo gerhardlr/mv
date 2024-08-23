@@ -1,6 +1,8 @@
 from threading import Event
 from assertpy import assert_that
 import logging
+
+from requests import HTTPError
 from mv.client import Proxy
 from pytest_bdd import scenario,given,when,then
 
@@ -57,7 +59,7 @@ def when_I_command_it_to_switch_on(proxy: Proxy):
 def when_I_command_it_again_to_switch_on(proxy: Proxy):
     try:
         proxy.command_on()
-    except AssertionError as exception:
+    except HTTPError as exception:
         return exception
 
 
@@ -105,8 +107,8 @@ def then_the_server_should_be_on(command_results: tuple[Proxy,Subscriber]):
     assert_that(proxy.state).is_equal_to("OFF")
 
 @then("the server should reject the command")
-def the_server_should_reject_the_command(failed_result: None | AssertionError):
-    assert_that(failed_result).is_instance_of(AssertionError)
+def the_server_should_reject_the_command(failed_result: None | HTTPError):
+    assert_that(failed_result).is_instance_of(HTTPError)
 
 @scenario("test_on_off.feature","Switch System On")
 def test_server_on():

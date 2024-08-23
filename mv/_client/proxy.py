@@ -1,7 +1,6 @@
 
 import abc
 import asyncio
-from assertpy import assert_that
 from fastapi.testclient import TestClient
 from .ws_listener import AsyncWSListener, WSListener
 from .base import AbstractObserver, AsynchAbstractObserver
@@ -53,22 +52,22 @@ class BaseProxy():
     def command_on(self,delay: float | None = None):
         json = {"delay": delay} if delay else delay
         result = self._client.post("switch_on",json = json)
-        assert_that(result.status_code).is_equal_to(200)
+        result.raise_for_status()
 
     def command_off(self,delay: float | None = None):
         json = {"delay": delay} if delay else delay
         result = self._client.post("switch_off",json = json)
-        assert_that(result.status_code).is_equal_to(200)
+        result.raise_for_status()
 
     def command_on_background(self,delay: float = 0):
         json = {"delay": delay}
         result = self._client.post("background_switch_on",json = json)
-        assert_that(result.status_code).is_equal_to(200)
+        result.raise_for_status()
 
     def command_off_background(self,delay: float = 0):
         json = {"delay": delay}
         result = self._client.post("background_switch_off",json = json)
-        assert_that(result.status_code).is_equal_to(200)
+        result.raise_for_status()
 
     async def async_command_on(self,delay: float | None = None):
         await asyncio.to_thread(self.command_on, delay)
@@ -80,7 +79,7 @@ class BaseProxy():
     @property
     def state(self):
         result = self._client.get("state")
-        assert_that(result.status_code).is_equal_to(200)
+        result.raise_for_status()
         return result.json()
 
 class Proxy(BaseProxy,WSListener):
