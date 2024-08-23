@@ -17,15 +17,24 @@ class Publisher(AbstractPublisher):
 def _set_state_on():
     with update_state() as state:
           state["state"] = "ON"
+
+def _set_state_off():
+    with update_state() as state:
+          state["state"] = "OFF"
     
 async def set_state_on():
     await asyncio.to_thread(_set_state_on)
+
+async def set_state_off():
+    await asyncio.to_thread(_set_state_off)
     
 
 async def command_listener(websocket):
     async for command in websocket:
         if command == "ON":
             await set_state_on()
+        elif command == "OFF":
+            await set_state_off()
 
 async def echo(websocket):
     async for message in websocket:
