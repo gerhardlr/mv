@@ -12,6 +12,12 @@ The interface to the server is done via an intermediate proxy object.
 
 Although the dev tests can be ran with mock replacesments, the feature tests requires the fastapi dev server to be started (see below).
 
+## Installing the system
+The project requires python 3.10 and poetry to be installed (you can also use the devcontainer supplied)
+```
+poetry install
+```
+
 ## Running the fastapi server in dev mode:
 
 ```
