@@ -1,7 +1,7 @@
 import asyncio
 from fastapi import  WebSocket
 
-from mv.stack_server import AbstractPublisher, StateServer
+from mv.state_machine import AbstractPublisher, StateServer
 
 class ConnectionManager(AbstractPublisher):
     def __init__(self):
@@ -25,3 +25,11 @@ class ConnectionManager(AbstractPublisher):
         for connection in self.active_connections:
             value = state["state"]
             asyncio.run(connection.send_text(value))
+
+_connection_manager: None | ConnectionManager = None
+
+def get_connection_manager():
+    global _connection_manager
+    if _connection_manager is None:
+        _connection_manager = ConnectionManager()
+    return _connection_manager

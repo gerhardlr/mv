@@ -1,13 +1,12 @@
 import asyncio
 from queue import Queue
 from websockets.server import serve
-import logging
 
-from mv.stack_server import state_server, AbstractPublisher,update_state
+from mv.state_machine import state_server, AbstractPublisher,update_state
 
 class Publisher(AbstractPublisher):
     def __init__(self) -> None:
-        self._events = Queue()
+        self._events = Queue[dict]()
 
     def publish(self, state):
         self._events.put_nowait(state)

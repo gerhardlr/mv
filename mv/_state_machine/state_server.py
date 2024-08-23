@@ -4,17 +4,18 @@ from contextlib import contextmanager, asynccontextmanager
 from queue import Queue
 from threading import Event, Lock, Thread
 from copy import deepcopy
-from typing import Literal
+from typing import Literal, TypeVar
 
+from .base import AbstractPublisher
 
-_state = {}
+T = TypeVar("T")
+
+_state: dict[str,T] = {}
 
 _state_control_signals = Queue[Literal["STOP","STATE_CHANGED"]]()
 
 _state_write_lock = Lock()
 _async_state_write_lock = asyncio.Lock()
-
-_self_publishing = Event()
 
 
 def cntrl_set_state_changed():
@@ -43,8 +44,12 @@ def update_state():
         _state = state
         cntrl_set_state_changed()
 
+def reset_state():
+    with update_state() as state:
+        state = {}
+
 def state_machine_is_busy() -> bool:
-    return _async_state_write_lock.locked()
+    return (_async_state_write_lock.locked() or _state_write_lock.locked())
 
 @asynccontextmanager
 async def async_update_state():
@@ -58,13 +63,6 @@ async def async_update_state():
         yield state
         _state = state
         cntrl_set_state_changed()
-
-
-class AbstractPublisher:
-
-    @abc.abstractmethod
-    def publish(self, state):
-        """"""
 
 
 class StateServer():
