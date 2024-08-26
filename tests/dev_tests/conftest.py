@@ -1,3 +1,5 @@
+import os
+from typing import Any, Generator
 import pytest
 import pytest_asyncio
 from fastapi.testclient import TestClient
@@ -5,7 +7,12 @@ from websockets import connect as async_connect
 from websockets.sync.client import connect
 import logging
 from mv.server import app
-from mv.state_machine import state_server, AbstractPublisher
+from mv.state_machine import (
+    state_server,
+    AbstractPublisher,
+    get_state_updater,
+    StateUpdater,
+)
 from mv.client import (
     get_async_mock_ws_server,
     get_mock_ws_server,
@@ -17,6 +24,7 @@ from mv.client import (
     RealClient,
     TestWebsocket,
 )
+
 
 from .helpers import MessageObserver, Publisher, EventObserver, AsynchMessageObserver
 
@@ -130,10 +138,13 @@ def fxt_publisher(settings: Settings):
     return settings.publisher
 
 
-@pytest.fixture(name="state_server")
-def fxt_state_server(publisher: AbstractPublisher):
+@pytest.fixture(name="state_updater")
+def fxt_state_updater(
+    publisher: AbstractPublisher,
+) -> Generator[StateUpdater, Any, None]:
     with state_server(publisher):
-        yield
+        state_updater = get_state_updater()
+        yield state_updater
 
 
 @pytest.fixture(name="events_observer")
@@ -142,3 +153,13 @@ def fxt_events_observer(settings: Settings):
     observer = EventObserver()
     settings.publisher.subscribe(observer)
     return observer
+
+
+@pytest.fixture(name="persist_state_in_file")
+def fxt_persist_state_in_file():
+    os.environ["PERSIST_STATE_IN_FILE"] = "True"
+
+
+@pytest.fixture(name="reset_state")
+def test_load_state_from_file(state_updater: StateUpdater):
+    state_updater.reset_state()

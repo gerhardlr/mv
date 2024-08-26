@@ -2,7 +2,7 @@ import abc
 from typing import Literal
 
 
-State = Literal["ON", "OFF"]
+State = Literal["ON", "OFF", "BUSY"]
 
 
 class StateSubscriber:

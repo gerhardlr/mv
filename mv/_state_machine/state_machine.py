@@ -2,7 +2,9 @@ import asyncio
 from contextlib import contextmanager
 from time import sleep
 from typing import Callable, ParamSpec, TypeVar
-from .state_server import update_state, state_machine_is_busy, get_state
+from .state_server import (
+    get_state_updater,
+)
 from .base import State
 
 P = ParamSpec("P")
@@ -15,7 +17,8 @@ class StateMachineBusyError(Exception):
 
 def check_busy(method: Callable[P, T]) -> Callable[P, T]:
     def wrapper(*args: P.args, **kwds: P.kwargs) -> T:
-        if state_machine_is_busy():
+        updater = get_state_updater()
+        if updater.state_machine_is_busy():
             raise StateMachineBusyError(
                 f"{method.__name__} not allowed when state machine is busy"
             )
@@ -28,10 +31,11 @@ class StateMachine:
 
     def __init__(self) -> None:
         self._state: None | State = None
+        self._updater = get_state_updater()
 
     @contextmanager
     def _update(self, delay: float | None = None):
-        with update_state() as state:
+        with self._updater.update_state() as state:
             if delay:
                 sleep(delay)
             self._state = state.get("state")
@@ -40,31 +44,39 @@ class StateMachine:
 
     @check_busy
     def switch_on(self, delay: float | None = None):
-        with self._update(delay):
-            self._state = "ON"
+        with self._updater.atomic():
+            if delay:
+                with self._update():
+                    self._state = "BUSY"
+            with self._update(delay):
+                self._state = "ON"
 
     async def async_switch_on(self, delay: float | None = None):
         await asyncio.to_thread(self.switch_on, delay)
 
     @check_busy
     def switch_off(self, delay: float | None = None):
-        with self._update(delay):
-            self._state = "OFF"
+        with self._updater.atomic():
+            if delay:
+                with self._update():
+                    self._state = "BUSY"
+            with self._update(delay):
+                self._state = "OFF"
 
     async def async_switch_off(self, delay: float | None = None):
         await asyncio.to_thread(self.switch_off, delay)
 
     @property
     def state(self):
-        state = get_state()
+        state = self._updater.get_state()
         return state.get("state")
 
     @property
     def busy(self):
-        return state_machine_is_busy()
+        return self._updater.state_machine_is_busy()
 
     def assert_ready(self):
-        if state_machine_is_busy():
+        if self._updater.state_machine_is_busy():
             raise StateMachineBusyError("machine is busy and can not be commanded")
 
 

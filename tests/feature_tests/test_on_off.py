@@ -30,6 +30,9 @@ class Subscriber(StateSubscriber):
     def wait_for_on(self):
         self._state_on.wait()
 
+    def wait_for_off(self):
+        self._state_off.wait()
+
 
 @given("a running state machhine on a server", target_fixture="proxy")
 def given_a_running_state_machhine_on_a_server():
@@ -92,16 +95,10 @@ def when_back_I_command_it_to_switch_off(proxy: Proxy):
     return (proxy, subscriber)
 
 
-@then("the server should first be off")
-def then_the_server_should_first_be_off(command_results: tuple[Proxy, Subscriber]):
-    proxy, _ = command_results
-    assert_that(proxy.state).is_equal_to("OFF")
-
-
-@then("the server should first be on")
+@then("the server should first be busy")
 def then_the_server_should_first_be_on(command_results: tuple[Proxy, Subscriber]):
     proxy, _ = command_results
-    assert_that(proxy.state).is_equal_to("ON")
+    assert_that(proxy.state).is_equal_to("BUSY")
 
 
 @then("the server should be on")
@@ -119,8 +116,8 @@ def then_the_server_should_be_off(command_results: tuple[Proxy, Subscriber]):
 
 
 @then("the server should reject the command")
-def the_server_should_reject_the_command(failed_result: None | AssertionError):
-    assert_that(failed_result).is_instance_of(AssertionError)
+def the_server_should_reject_the_command(failed_result: None | HTTPError):
+    assert_that(failed_result).is_instance_of(HTTPError)
 
 
 @scenario("test_on_off.feature", "Switch System On")

@@ -2,9 +2,9 @@ from ._state_machine.state_machine import get_state_machine, StateMachineBusyErr
 from ._state_machine.state_server import (
     state_server,
     AbstractPublisher,
-    update_state,
     StateServer,
-    reset_state,
+    get_state_updater,
+    StateUpdater,
 )
 from ._state_machine.base import StateSubscriber, State
 
@@ -14,9 +14,9 @@ __all__ = [
     "StateMachineBusyError",
     "state_server",
     "AbstractPublisher",
-    "update_state",
     "StateServer",
     "StateSubscriber",
     "State",
-    "reset_state",
+    "get_state_updater",
+    "StateUpdater",
 ]

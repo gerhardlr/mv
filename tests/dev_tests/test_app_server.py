@@ -3,7 +3,8 @@ from threading import Event
 from assertpy import assert_that
 import pytest
 import logging
-
+from httpx import HTTPStatusError
+from requests import HTTPError
 from mv.client import Proxy, AsyncProxy
 from mv.state_machine import State, StateSubscriber
 
@@ -22,7 +23,7 @@ async def test_command_twice(proxy: Proxy):
 
     task1 = asyncio.create_task(cor1())
     task2 = asyncio.create_task(cor2())
-    with pytest.raises(AssertionError):
+    with pytest.raises(HTTPStatusError):
         await task1
         await task2
 
@@ -109,7 +110,7 @@ def test_server_with_multiple_background_command(proxy: Proxy):
     subscriber = Subscriber()
     proxy.subscribe(subscriber)
     proxy.command_on_background(0.2)
-    with pytest.raises(AssertionError):
+    with pytest.raises(HTTPError):
         proxy.command_on_background()
     subscriber.wait_for_on()
     assert_that(proxy.state).is_equal_to("ON")
@@ -121,7 +122,7 @@ def test_mock_server_with_multiple_background_command(proxy: Proxy):
     subscriber = Subscriber()
     proxy.subscribe(subscriber)
     proxy.command_on_background(0.2)
-    with pytest.raises(AssertionError):
+    with pytest.raises(HTTPError):
         proxy.command_on_background()
 
 
@@ -137,7 +138,7 @@ def test_mock_server_with_background_command_off(proxy: Proxy):
     subscriber = Subscriber()
     proxy.subscribe(subscriber)
     proxy.command_off_background(2)
-    subscriber.wait_for_on()
+    subscriber.wait_for_off()
     assert_that(proxy.state).is_equal_to("OFF")
 
 
