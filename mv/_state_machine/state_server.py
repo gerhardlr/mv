@@ -1,4 +1,3 @@
-import abc
 import asyncio
 from contextlib import contextmanager, asynccontextmanager
 from queue import Queue
@@ -10,9 +9,9 @@ from .base import AbstractPublisher
 
 T = TypeVar("T")
 
-_state: dict[str,T] = {}
+_state: dict[str, T] = {}
 
-_state_control_signals = Queue[Literal["STOP","STATE_CHANGED"]]()
+_state_control_signals = Queue[Literal["STOP", "STATE_CHANGED"]]()
 
 _state_write_lock = Lock()
 _async_state_write_lock = asyncio.Lock()
@@ -21,7 +20,8 @@ _async_state_write_lock = asyncio.Lock()
 def cntrl_set_state_changed():
     _state_control_signals.put_nowait("STATE_CHANGED")
 
-def cntrl_set_server_stop():   
+
+def cntrl_set_server_stop():
     _state_control_signals.put_nowait("STOP")
 
 
@@ -44,12 +44,15 @@ def update_state():
         _state = state
         cntrl_set_state_changed()
 
+
 def reset_state():
     with update_state() as state:
-        state = {}
+        state.clear()
+
 
 def state_machine_is_busy() -> bool:
-    return (_async_state_write_lock.locked() or _state_write_lock.locked())
+    return _async_state_write_lock.locked() or _state_write_lock.locked()
+
 
 @asynccontextmanager
 async def async_update_state():
@@ -65,7 +68,7 @@ async def async_update_state():
         cntrl_set_state_changed()
 
 
-class StateServer():
+class StateServer:
 
     def __init__(self, publisher: AbstractPublisher):
         self._publisher = publisher
@@ -82,9 +85,9 @@ class StateServer():
             else:
                 self._started_flag.clear()
                 return
-            
+
     def start_server(self):
-        self._server_thread = Thread(target = self._server, daemon=True)
+        self._server_thread = Thread(target=self._server, daemon=True)
         self._server_thread.start()
         self._started_flag.wait()
 

@@ -25,6 +25,5 @@ __all__ = [
     "AsynchAbstractObserver",
     "AbstractObserver",
     "AsyncProxy",
-    "RealClient"
-
+    "RealClient",
 ]

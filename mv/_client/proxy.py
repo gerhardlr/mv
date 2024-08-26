@@ -1,4 +1,3 @@
-
 import abc
 import asyncio
 from assertpy import assert_that
@@ -7,7 +6,7 @@ from .ws_listener import AsyncWSListener, WSListener
 from .base import AbstractObserver, AsynchAbstractObserver
 
 from mv.state_machine import StateSubscriber, State
-       
+
 
 class ProxyObserver(AbstractObserver):
     def __init__(self) -> None:
@@ -22,8 +21,9 @@ class ProxyObserver(AbstractObserver):
     def subscribe(self, subscriber: StateSubscriber):
         self._subscribers.append(subscriber)
         self._index += 1
-        return self._index 
-    
+        return self._index
+
+
 class AsynchProxyObserver(AsynchAbstractObserver):
     def __init__(self) -> None:
         self._subscribers: list[StateSubscriber] = []
@@ -37,11 +37,10 @@ class AsynchProxyObserver(AsynchAbstractObserver):
     def subscribe(self, subscriber: StateSubscriber):
         self._subscribers.append(subscriber)
         self._index += 1
-        return self._index 
+        return self._index
 
-    
 
-class BaseProxy():
+class BaseProxy:
 
     def __init__(self, client: TestClient) -> None:
         self._client = client
@@ -50,55 +49,56 @@ class BaseProxy():
     def subscribe(self, subscriber: StateSubscriber):
         """"""
 
-    def command_on(self,delay: float | None = None):
+    def command_on(self, delay: float | None = None):
         json = {"delay": delay} if delay else delay
-        result = self._client.post("switch_on",json = json)
-        assert_that(result.status_code).is_equal_to(200)
+        result = self._client.post("switch_on", json=json)
+        result.raise_for_status()
 
-    def command_off(self,delay: float | None = None):
+    def command_off(self, delay: float | None = None):
         json = {"delay": delay} if delay else delay
-        result = self._client.post("switch_off",json = json)
-        assert_that(result.status_code).is_equal_to(200)
+        result = self._client.post("switch_off", json=json)
+        result.raise_for_status()
 
-    def command_on_background(self,delay: float = 0):
+    def command_on_background(self, delay: float = 0):
         json = {"delay": delay}
-        result = self._client.post("background_switch_on",json = json)
-        assert_that(result.status_code).is_equal_to(200)
+        result = self._client.post("background_switch_on", json=json)
+        result.raise_for_status()
 
-    def command_off_background(self,delay: float = 0):
+    def command_off_background(self, delay: float = 0):
         json = {"delay": delay}
-        result = self._client.post("background_switch_off",json = json)
-        assert_that(result.status_code).is_equal_to(200)
+        result = self._client.post("background_switch_off", json=json)
+        result.raise_for_status()
 
-    async def async_command_on(self,delay: float | None = None):
+    async def async_command_on(self, delay: float | None = None):
         await asyncio.to_thread(self.command_on, delay)
 
-    async def async_command_off(self,delay: float | None = None):
+    async def async_command_off(self, delay: float | None = None):
         await asyncio.to_thread(self.command_off, delay)
 
- 
     @property
     def state(self):
         result = self._client.get("state")
         assert_that(result.status_code).is_equal_to(200)
         return result.json()
 
-class Proxy(BaseProxy,WSListener):
+
+class Proxy(BaseProxy, WSListener):
 
     def __init__(self, client: TestClient) -> None:
         super().__init__(client)
         self._proxy_observer = ProxyObserver()
-        WSListener.__init__(self,self._proxy_observer)
+        WSListener.__init__(self, self._proxy_observer)
 
     def subscribe(self, subscriber: StateSubscriber):
         return self._proxy_observer.subscribe(subscriber)
 
-class AsyncProxy(BaseProxy,AsyncWSListener):
+
+class AsyncProxy(BaseProxy, AsyncWSListener):
 
     def __init__(self, client: TestClient) -> None:
         BaseProxy.__init__(self, client)
         self._proxy_observer = AsynchProxyObserver()
-        AsyncWSListener.__init__(self,self._proxy_observer)
+        AsyncWSListener.__init__(self, self._proxy_observer)
 
     def subscribe(self, subscriber: StateSubscriber):
         return self._proxy_observer.subscribe(subscriber)

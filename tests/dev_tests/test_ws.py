@@ -19,6 +19,7 @@ def test_ws_local(websocket: MockWSServer):
     rx_message = websocket.recv()
     assert_that(rx_message).is_equal_to(tx_message)
 
+
 @pytest.mark.asyncio
 @pytest.mark.usefixtures("use_ws_server")
 async def test_async_ws_server(async_websocket: websockets.WebSocketClientProtocol):
