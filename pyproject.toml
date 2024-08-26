@@ -24,6 +24,9 @@ black = "^24.8.0"
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
+[tool.poetry.scripts]
+serve = "mv.server:serve"
+
 [tool.pytest.ini_options]
 log_cli = true
 log_cli_level = "INFO"

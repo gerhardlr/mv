@@ -1,11 +1,15 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the
-// README at: https://github.com/devcontainers/templates/tree/main/src/kubernetes-helm-minikube
+// README at: https://github.com/devcontainers/templates/tree/main/src/python
 {
-	"name": "Kubernetes - Minikube-in-Docker",
+	"name": "Python 3",
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
 	"build": {
-		"dockerfile": "Dockerfile"
+		"dockerfile": "../.images/base/Dockerfile",
+		"context": "../.images/base"
 	},
+	"mounts": [
+		"source=${localEnv:HOME}${localEnv:USERPROFILE}/.kube,target=/home/user/.kube,type=bind,consistency=cached"
+	],
 	"features": {
 		"ghcr.io/devcontainers/features/docker-in-docker:2": {
 			"enableNonRootDocker": "true",
@@ -17,9 +21,24 @@
 			"minikube": "latest"
 		}
 	},
+	// Features to add to he dev container. More info: https://containers.dev/features.
+	// "features": {},
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	// "forwardPorts": [],
+	// Use 'postCreateCommand' to run commands after the container is created.
+	// Configure tool-specific properties.
+	"runArgs": [
+		"--network=host"
+	],
 	"customizations": {
 		"vscode": {
 			"settings": {
+				"vs-kubernetes.knownKubeconfigs": [
+					"/user/.kube/config"
+				],
+				"vscode-kubernetes.kubectl-path": "/usr/bin/kubectl",
+				"vscode-kubernetes.helm-path": "/usr/sbin/helm",
+				"vs-kubernetes.kubeconfig": "/user/.kube/config",
 				"python.testing.pytestArgs": [
 					"tests"
 				],
@@ -46,14 +65,6 @@
 			]
 		}
 	},
-	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	// "forwardPorts": [],
-	// Use 'postCreateCommand' to run commands after the container is created.
-	// "postCreateCommand": "kubectl version",
-	// Use 'postStartCommand' to run commands after the container is created like starting minikube.
-	"postStartCommand": "nohup bash -c 'minikube start &' > minikube.log 2>&1"
-	// Configure tool-specific properties.
-	// "customizations": {},
 	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
-	// "remoteUser": "root"
+	"remoteUser": "root"
 }
