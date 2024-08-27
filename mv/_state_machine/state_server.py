@@ -7,13 +7,13 @@ from pathlib import Path
 from queue import Queue
 from threading import Event, Lock, Thread
 from copy import deepcopy
-from typing import Any, Generator, Literal, TypeVar
+from typing import Any, Generator, Literal, TypeVar, cast
 
 from .base import AbstractPublisher
 
 T = TypeVar("T")
 
-_state: dict[str, T] = {}
+_state: dict[str, Any] = {}
 
 _state_control_signals = Queue[Literal["STOP", "STATE_CHANGED"]]()
 
@@ -33,7 +33,7 @@ class StateUpdater:
 
     @abc.abstractmethod
     @contextmanager
-    def update_state(self) -> Generator[dict[str, T], Any, None]:
+    def update_state(self) -> Generator[dict[str, Any], Any, None]:
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -42,16 +42,13 @@ class StateUpdater:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def get_state(self) -> dict[str, T]:
+    def get_state(self) -> dict[str, Any]:
         raise NotImplementedError()
 
     @abc.abstractmethod
     def reset_state(self) -> None:
         raise NotImplementedError()
-
-    @asynccontextmanager
-    async def async_update_state() -> Generator[dict[str, T], Any, None]:
-        raise NotImplementedError()
+        """"""
 
     def state_machine_is_busy(self) -> bool:
         return _async_state_write_lock.locked() or _state_write_lock.locked()

@@ -2,7 +2,7 @@ import asyncio
 from queue import Queue
 from websockets.server import serve
 
-from mv.state_machine import state_server, AbstractPublisher, update_state
+from mv.state_machine import state_server, AbstractPublisher, get_state_updater
 
 
 class Publisher(AbstractPublisher):
@@ -17,7 +17,8 @@ class Publisher(AbstractPublisher):
 
 
 def _set_state_on():
-    with update_state() as state:
+    updater = get_state_updater()
+    with updater.update_state() as state:
         state["state"] = "ON"
 
 

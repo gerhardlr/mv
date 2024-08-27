@@ -5,10 +5,10 @@ from queue import Queue
 from threading import Event
 from typing import cast
 import websockets
-#from websockets import connect as async_connect
 from websockets.sync.client import connect
 
 from .base import AbstractObserver, AsynchAbstractObserver
+from .config import get_ws_address
 
 from mv.state_machine import AbstractPublisher, StateServer
 
@@ -104,7 +104,7 @@ async def get_async_websocket():
     if _use_mock_ws:
         yield get_async_mock_ws_server()
     else:
-        async with websockets.connect("ws://localhost:8000") as websocket:
+        async with websockets.connect(get_ws_address()) as websocket:
             yield websocket
 
 @contextmanager
@@ -112,7 +112,7 @@ def get_websocket():
     if _use_mock_ws:
         yield get_mock_ws_server()
     else:
-        with connect("ws://localhost:8000") as websocket:
+        with connect(get_ws_address()) as websocket:
             yield websocket
             
 TestWebsocket =  websockets.WebSocketClientProtocol | AsyncMockWSServer

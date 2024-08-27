@@ -1,5 +1,6 @@
 import asyncio
 from contextlib import contextmanager
+from threading import Event
 from time import sleep
 from typing import Callable, ParamSpec, TypeVar
 from .state_server import (
@@ -33,6 +34,7 @@ class StateMachine:
         self._state: None | State = None
         self._updater = get_state_updater()
 
+
     @contextmanager
     def _update(self, delay: float | None = None):
         with self._updater.update_state() as state:
@@ -45,9 +47,8 @@ class StateMachine:
     @check_busy
     def switch_on(self, delay: float | None = None):
         with self._updater.atomic():
-            if delay:
-                with self._update():
-                    self._state = "BUSY"
+            with self._update():
+                self._state = "BUSY"        
             with self._update(delay):
                 self._state = "ON"
 
@@ -57,9 +58,8 @@ class StateMachine:
     @check_busy
     def switch_off(self, delay: float | None = None):
         with self._updater.atomic():
-            if delay:
-                with self._update():
-                    self._state = "BUSY"
+            with self._update():
+                self._state = "BUSY"
             with self._update(delay):
                 self._state = "OFF"
 
