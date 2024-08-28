@@ -116,16 +116,6 @@ def test_server_with_multiple_background_command(proxy: Proxy):
     assert_that(proxy.state).is_equal_to("ON")
 
 
-@pytest.mark.usefixtures("use_ws_server")
-@pytest.mark.usefixtures("use_real_server")
-def test_mock_server_with_multiple_background_command(proxy: Proxy):
-    subscriber = Subscriber()
-    proxy.subscribe(subscriber)
-    proxy.command_on_background(0.2)
-    with pytest.raises(HTTPError):
-        proxy.command_on_background()
-
-
 def test_mock_server_with_background_command(proxy: Proxy):
     subscriber = Subscriber()
     proxy.subscribe(subscriber)

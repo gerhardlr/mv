@@ -23,3 +23,13 @@ poetry install
 ```
 poetry run fastapi dev mv/server.py
 ```
+
+## deploying
+
+This devcontainer comes with the implicit loading of a minikube. When the window is launched minikube is started in the background.
+However note that by default the docker registry used is decoupled from the one being used by minikube. This means, images that you build
+using docker will not automatically be picked up by kubernetes (in the case of a pullPolicy of "Never"). To enable this run:
+```
+eval $(minikube docker-env)
+
+```

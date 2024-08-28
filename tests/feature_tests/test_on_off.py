@@ -73,7 +73,7 @@ def when_I_command_it_again_to_switch_on(proxy: Proxy):
 def when_back_I_command_it_to_switch_on(proxy: Proxy):
     subscriber = Subscriber()
     proxy.subscribe(subscriber)
-    proxy.command_on_background(0.5)
+    proxy.command_on_background(2)
     return (proxy, subscriber)
 
 

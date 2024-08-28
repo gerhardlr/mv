@@ -9,6 +9,7 @@ from fastapi import (
 )
 
 import logging
+import os
 from mv.state_machine import get_state_machine, StateMachineBusyError
 
 from mv._server.connection_manager import get_connection_manager
@@ -46,7 +47,6 @@ def post_switch_off_background(
 ):
     delay = args if args is None else args.get("delay")
     # because we return immediately we have to check the state
-    # before pushing command to background task
     state_machine.assert_ready()
     background_tasks.add_task(state_machine.switch_off, delay)
 
@@ -80,4 +80,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=30000)
+    if log_level := os.getenv("LOG_LEVEL") == "debug":
+        uvicorn.run(app, host="0.0.0.0", port=30000, log_level=log_level)
+    else:
+        uvicorn.run(app, host="0.0.0.0", port=30000)

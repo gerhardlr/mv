@@ -5,6 +5,7 @@ from ._state_machine.state_server import (
     StateServer,
     get_state_updater,
     StateUpdater,
+    get_state_server
 )
 from ._state_machine.base import StateSubscriber, State
 
@@ -19,4 +20,5 @@ __all__ = [
     "State",
     "get_state_updater",
     "StateUpdater",
+    "get_state_server"
 ]

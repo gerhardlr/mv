@@ -19,8 +19,16 @@ spec:
           imagePullPolicy: Never
           image: local/mv:latest
           env:
-            - name: PERSIST_STATE_IN_FILE
+            #- name: PERSIST_STATE_IN_FILE
+            #  value: "true"
+            - name: USE_REDIS_FOR_STATE_SERVER
               value: "true"
+            - name: REDIS_PORT
+              value: "6379"
+            - name: REDIS_HOST
+              value: redis
+            - name: LOG_LEVEL
+              value: debug
           volumeMounts:
             - name: state
               mountPath: /root/app/.build
