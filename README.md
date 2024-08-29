@@ -244,8 +244,31 @@ To do this correctly one should persist the information in a database (e.g. redi
 
 ### mv3 installation
 
-This deployment solves the problem of running multiple replica servers using a redis backend for persisting the state
+This deployment solves the problem of running multiple replica servers using a redis backend for persisting the state.
 
+To do this a new state machine variant is needed that interfaces with a Redis server. This can be tested by running the system with the env `USE_REDIS_FOR_STATE_SERVER=True`. If you want to do debugging or development you can set `USEFAKE_REDIS=True`
+
+The redis server settings is provided the the following env variables:
+1. REDIS_HOST e.g. 192.168.49.2
+2. REDIS_PORT e.g 30001
+
+The redis server is deployed as a seperate pod (statefullset), with a nodeport service (port 30001). This means you can also run the server from you host machine and connect to the redis via the nodeport 30001
+
+To deploy run
+
+```
+helm install mv3 helm/mv3
+```
+
+Then run the tests on you host.
+
+Now scale the system up to 3.
+
+```
+kubectl scale --replicas=3 deployment/mv
+```
+
+Then run the tests again. This time the tests will pass.
 
 
 
