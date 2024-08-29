@@ -1,17 +1,18 @@
 import os
-from typing import Any, Generator
+from typing import Any, Generator, cast
 import pytest
 import pytest_asyncio
 from fastapi.testclient import TestClient
 from websockets import connect as async_connect
-from websockets.sync.client import connect
+from websockets.sync.client import connect, ClientConnection
 import logging
+from mv.client import MockWSServer
 from mv.server import app
 from mv.state_machine import (
     state_server,
     AbstractPublisher,
     get_state_updater,
-    StateUpdater,
+    AbstractStateUpdater,
 )
 from mv.client import (
     get_async_mock_ws_server,
@@ -35,7 +36,7 @@ class Settings:
 
     use_mock_ws = True
     client = TestClient(app)
-    websocket = None | TestWebsocket
+    websocket: None | TestWebsocket | MockWSServer | ClientConnection = None
     publisher = Publisher()
     use_synch_listening = False
 
@@ -85,7 +86,7 @@ async def fxt_websocket(settings: Settings):
         yield websocket
     else:
         with connect("ws://localhost:8000") as websocket:
-            settings.websocket = websocket
+            settings.websocket = cast(ClientConnection, websocket)
             yield websocket
 
 
@@ -141,7 +142,7 @@ def fxt_publisher(settings: Settings):
 @pytest.fixture(name="state_updater")
 def fxt_state_updater(
     publisher: AbstractPublisher,
-) -> Generator[StateUpdater, Any, None]:
+) -> Generator[AbstractStateUpdater, Any, None]:
     with state_server(publisher):
         state_updater = get_state_updater()
         yield state_updater
@@ -161,5 +162,5 @@ def fxt_persist_state_in_file():
 
 
 @pytest.fixture(name="reset_state")
-def test_load_state_from_file(state_updater: StateUpdater):
+def test_load_state_from_file(state_updater: AbstractStateUpdater):
     state_updater.reset_state()

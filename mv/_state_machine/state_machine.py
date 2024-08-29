@@ -1,11 +1,10 @@
 import asyncio
 from contextlib import contextmanager
 from time import sleep
-from typing import Callable, ParamSpec, TypeVar
-from .state_server import (
-    get_state_updater,
-)
-from .base import State
+from typing import Callable, Literal, ParamSpec, TypeVar
+
+from .base import AbstractPublisher
+from .factory import get_state_updater, get_state_server
 
 P = ParamSpec("P")
 T = TypeVar("T")
@@ -25,6 +24,9 @@ def check_busy(method: Callable[P, T]) -> Callable[P, T]:
         return method(*args, **kwds)
 
     return wrapper
+
+
+State = Literal["ON", "OFF", "BUSY"]
 
 
 class StateMachine:
@@ -86,3 +88,11 @@ def get_state_machine():
     if _state_machine is None:
         _state_machine = StateMachine()
     return _state_machine
+
+
+@contextmanager
+def state_server(publisher: AbstractPublisher):
+    server = get_state_server(publisher)
+    server.start_server()
+    yield
+    server.stop_server()
