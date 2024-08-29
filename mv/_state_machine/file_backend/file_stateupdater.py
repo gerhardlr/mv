@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 from typing import Any
 from .base import StateUpdater
-from .state import state_write_lock, cntrl_set_state_changed, async_state_write_lock
+from .state_control import state_write_lock, cntrl_set_state_changed, async_state_write_lock
 
 
 class InFileStateUpdater(StateUpdater):

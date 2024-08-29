@@ -1,13 +1,12 @@
 from contextlib import asynccontextmanager, contextmanager
 from .base import StateUpdater
 
-from .state import (
+from .state_control import (
     state_write_lock,
     cntrl_set_state_changed,
     async_state_write_lock,
-    get_state,
-    set_state,
 )
+from .memstate import get_state, set_state
 
 
 class InMemStateUpdater(StateUpdater):

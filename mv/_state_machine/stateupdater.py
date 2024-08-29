@@ -1,6 +1,6 @@
 from .base import AbstractStateUpdater
 
-from .state import state_is_locked
+from .state_control import state_is_locked
 
 
 class StateUpdater(AbstractStateUpdater):

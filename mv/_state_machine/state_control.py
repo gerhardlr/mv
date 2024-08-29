@@ -2,14 +2,8 @@ from queue import Queue
 import asyncio
 from contextlib import asynccontextmanager, contextmanager
 from threading import Lock
-from typing import Any, Literal
-from copy import deepcopy
+from typing import Literal
 
-
-State = Literal["ON", "OFF", "BUSY"]
-
-
-_state: dict[str, Any] = {}
 
 Signal = Literal["STOP", "STATE_CHANGED"]
 
@@ -17,17 +11,6 @@ _state_control_signals = Queue[Signal]()
 
 _state_write_lock = Lock()
 _async_state_write_lock = asyncio.Lock()
-
-
-def get_state():
-    global _state
-    state_copy = deepcopy(_state)
-    return state_copy
-
-
-def set_state(state: dict[str, Any]):
-    global _state
-    _state = state
 
 
 def cntrl_set_state_changed():

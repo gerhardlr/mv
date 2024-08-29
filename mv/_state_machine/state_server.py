@@ -1,6 +1,6 @@
 from threading import Event, Thread
 from .base import AbstractPublisher, AbstractStateServer, AbstractStateUpdater
-from .state import get_state_control_signals, cntrl_set_server_stop
+from .state_control import get_state_control_signals, cntrl_set_server_stop
 
 
 class StateServer(AbstractStateServer):
