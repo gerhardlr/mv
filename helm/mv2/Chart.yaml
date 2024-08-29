@@ -1,0 +1,6 @@
+apiVersion: v2
+name: mv
+description: "demonstrates deployment as a deployment with a replica of 1 running in persisted mode"
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

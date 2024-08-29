@@ -1,0 +1,6 @@
+apiVersion: v2
+name: mv1
+description: "demonstrates deployment as a single pod with connectivity only via a 'side-car' curl container"
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
