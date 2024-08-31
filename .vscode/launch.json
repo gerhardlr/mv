@@ -9,14 +9,30 @@
             "type": "debugpy",
             "request": "launch",
             "program": "${file}",
-            "console": "integratedTerminal"
+            "console": "integratedTerminal",
+            "justMyCode": false
         },
         {
             "name": "Python Debugger: server",
             "type": "debugpy",
             "request": "launch",
             "program": "tests/serve.py",
-            "console": "integratedTerminal"
-        }
+        },
+        {
+            "name": "Python Debugger: tango",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "tests/serve_tango.py",
+            "console": "integratedTerminal",
+            "args": [
+                "app",
+                "-nodb",
+                "--dlist",
+                "mv/statemachine/1",
+                "-port",
+                "10000"
+            ],
+            "justMyCode": false
+        },
     ]
 }

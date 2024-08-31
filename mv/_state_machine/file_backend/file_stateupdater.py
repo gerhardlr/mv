@@ -1,27 +1,39 @@
 from contextlib import asynccontextmanager, contextmanager
 import json
 from pathlib import Path
+from threading import Lock
 from typing import Any
 from .base import StateUpdater
-from .state_control import state_write_lock, cntrl_set_state_changed, async_state_write_lock
+from .state_control import (
+    state_write_lock,
+    cntrl_set_state_changed,
+    async_state_write_lock,
+)
 
 
 class InFileStateUpdater(StateUpdater):
     _path = Path(".build/state.json")
 
     def __init__(self) -> None:
+        self._file_read_lock = Lock()
         if not self._path.exists():
             if not (dir := self._path.parent).exists():
                 dir.mkdir()
             self._write({})
 
     def _write(self, state: dict[str, Any]):
-        with self._path.open("w") as file:
-            json.dump(state, file)
+        with self._file_read_lock:
+            with self._path.open("w") as file:
+                json.dump(state, file)
 
     def _read(self):
-        with self._path.open("r") as file:
-            return json.load(file)
+        with self._file_read_lock:
+            try:
+                with self._path.open("r") as file:
+                    return json.load(file)
+            except Exception:
+                foo = "bar"
+                pass
 
     def get_state(self):
         return self._read()
