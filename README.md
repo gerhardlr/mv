@@ -278,6 +278,29 @@ kubectl scale --replicas=3 deployment/mv
 
 Then run the tests again. This time the tests will pass.
 
+### tangomv installation
+
+This application uses the tango device server as the server (using the same statemachine and backend)
+
+To install run:
+
+```
+helm install mvtango helm/mvtango
+```
+
+To test that the server is running:
+
+```
+export SERVER_IP=192.168.49.2
+export SERVER_IP=30002
+ping_device
+```
+
+Note, currently there is a delay of 12 seconds in waiting for events to be pushed from tango device. This seems to have
+something to do with the way the server is deployed with in K8s.
+
+
+
 
 
 

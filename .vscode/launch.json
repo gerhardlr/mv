@@ -30,7 +30,7 @@
                 "--dlist",
                 "mv/statemachine/1",
                 "-port",
-                "30000"
+                "30002"
             ],
             "justMyCode": false
         },

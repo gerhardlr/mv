@@ -23,17 +23,23 @@ class Subscriber(AbstractProxy):
         self.current: None | str = None
 
     def push_event(self, event: EventData):
+        logging.info(event)
         if event is None:
             return
-        value = event.attr_value.value
-        if self.current is None:
-            self.current = value
+        if event.err:
+            logging.info(f"Errors received in event from tango server: {event.errors}")
             return
-        if value == "ON":
-            self._on.set()
-        elif value == "OFF":
-            self._off.set()
-
+        if event.attr_value:
+            value = event.attr_value.value
+            if self.current is None:
+                self.current = value
+                return
+            if value == "ON":
+                self._on.set()
+            elif value == "OFF":
+                self._off.set()
+    
+        
     def wait_for_on(self):
         self._on.wait()
 

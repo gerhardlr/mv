@@ -22,6 +22,9 @@ class TangoProxy(AbstractProxy):
         self._proxy = get_tango_proxy(self.dev_name)
         self._proxy.ping()
 
+    def ping(self):
+        return self._proxy.ping()
+
     def subscribe(self, subscriber: Any) -> int:
         sub_id = self._proxy.subscribe_event(
             "agg_state", EventType.CHANGE_EVENT, subscriber

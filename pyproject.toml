@@ -30,6 +30,7 @@ build-backend = "poetry.core.masonry.api"
 [tool.poetry.scripts]
 serve = "mv.server:serve"
 serve_tango = "mv.tango_server:serve"
+ping_device = "mv.ping:ping"
 
 [tool.pytest.ini_options]
 log_cli = true

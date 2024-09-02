@@ -29,16 +29,8 @@ spec:
               value: redis
             - name: LOG_LEVEL
               value: debug
-          volumeMounts:
-            - name: state
-              mountPath: /root/app/.build
           ports:
             - containerPort: 30000
-      volumes:
-        - name: state
-          hostPath:
-            path: /.build
-            type: DirectoryOrCreate
 ---
 apiVersion: v1
 kind: Service
