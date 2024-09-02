@@ -40,7 +40,7 @@ class StateMachine:
         with self._updater.update_state() as state:
             if delay:
                 sleep(delay)
-            self._state = state.get("state")
+            self._state = state.get("state") if state else None
             yield
             state["state"] = self._state
 

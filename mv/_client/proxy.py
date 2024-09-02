@@ -3,7 +3,7 @@ import asyncio
 from assertpy import assert_that
 from fastapi.testclient import TestClient
 from .ws_listener import AsyncWSListener, WSListener
-from .base import AbstractObserver, AsynchAbstractObserver
+from .base import AbstractObserver, AsynchAbstractObserver, AbstractProxy
 
 from mv.state_machine import StateSubscriber, State
 
@@ -40,7 +40,7 @@ class AsynchProxyObserver(AsynchAbstractObserver):
         return self._index
 
 
-class BaseProxy:
+class BaseProxy(AbstractProxy):
 
     def __init__(self, client: TestClient) -> None:
         self._client = client

@@ -12,7 +12,7 @@ import logging
 import os
 from mv.state_machine import get_state_machine, StateMachineBusyError
 
-from mv._server.connection_manager import get_connection_manager
+from mv._server._fast_api_server.connection_manager import get_connection_manager
 
 
 logger = logging.getLogger()

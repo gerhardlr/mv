@@ -1,4 +1,5 @@
 from ._client.proxy import Proxy, AsyncProxy
+from ._client.tango_proxy import TangoProxy, get_tango_proxy
 from ._client.ws_listener import (
     get_async_mock_ws_server,
     set_use_server_ws,
@@ -10,7 +11,7 @@ from ._client.ws_listener import (
     get_mock_ws_server,
 )
 from ._client.client import RealClient
-from ._client.base import AsynchAbstractObserver, AbstractObserver
+from ._client.base import AsynchAbstractObserver, AbstractObserver, AbstractProxy
 
 __all__ = [
     "Proxy",
@@ -26,4 +27,7 @@ __all__ = [
     "AbstractObserver",
     "AsyncProxy",
     "RealClient",
+    "get_tango_proxy",
+    "TangoProxy",
+    "AbstractProxy",
 ]

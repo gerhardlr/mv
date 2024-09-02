@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager, contextmanager
 import json
 from pathlib import Path
 from threading import Lock
+from time import sleep
 from typing import Any
 from .base import StateUpdater
 from .state_control import (
@@ -32,8 +33,10 @@ class InFileStateUpdater(StateUpdater):
                 with self._path.open("r") as file:
                     return json.load(file)
             except Exception:
-                foo = "bar"
-                pass
+                # attempt again if failed the first time
+                sleep(2)
+                with self._path.open("r") as file:
+                    return json.load(file)
 
     def get_state(self):
         return self._read()
@@ -48,6 +51,7 @@ class InFileStateUpdater(StateUpdater):
         # once the signal is sent the update state lock is released
         with state_write_lock():
             state = self._read()
+            state = state if state else {}
             # we copy the state so that it can be red statically whilst being updated
             yield state
             self._write(state)
@@ -60,6 +64,7 @@ class InFileStateUpdater(StateUpdater):
         # once the signal is sent the update state lock is released
         async with async_state_write_lock():
             state = self._read()
+            state = state if state else {}
             # we copy the state so that it can be red statically whilst being updated
             yield state
             self._write(state)
@@ -68,6 +73,7 @@ class InFileStateUpdater(StateUpdater):
     @contextmanager
     def atomic(self):
         original_state = self._read()
+        original_state = original_state if original_state else {}
         try:
             yield
         except Exception as exception:

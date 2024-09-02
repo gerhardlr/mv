@@ -29,7 +29,15 @@ poetry run fastapi dev mv/server
 To run the server as for default production
 
 ```
-poetry run serve
+poetry shell
+serve
+```
+
+## Running the tango device server:
+
+```
+poetry shell
+serve_tango app -nodb --dlist "mv/statemachine/1" -port 30002
 ```
 
 
