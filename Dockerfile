@@ -1,5 +1,7 @@
 FROM python:3.11.9
 
+# add-apt-repository -y ppa:deadsnakes/ppa && apt update && apt install -y python3.11 python3.8-venv
+
 RUN pip install pipx && pipx install poetry 
 
 ENV PATH=/root/.local/bin/:$PATH
