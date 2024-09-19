@@ -1,14 +1,15 @@
 import requests
 from fastapi.testclient import TestClient
 
+from .config import get_server_address
+
+
 class RealClient(TestClient):
 
-    base_url = "http://127.0.0.1:8000/"
-
     def __init__(self):
-        pass
+        self.base_url = get_server_address()
 
-    def get(self,path):
+    def get(self, path):
         return requests.get(f"{self.base_url}{path}")
 
     def post(self, path: str, **kwargs):

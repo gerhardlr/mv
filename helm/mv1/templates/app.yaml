@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mv
+spec:
+  containers:
+    - name: mv
+      imagePullPolicy: Never
+      image: local/mv:latest
+    - name: curl
+      image: curlimages/curl:latest
+      command: ['sh', '-c', 'sleep infinity']
+
+

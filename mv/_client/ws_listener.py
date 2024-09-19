@@ -5,12 +5,12 @@ from queue import Queue
 from threading import Event
 from typing import cast
 import websockets
-#from websockets import connect as async_connect
 from websockets.sync.client import connect
 
 from .base import AbstractObserver, AsynchAbstractObserver
+from .config import get_ws_address
 
-from mv.state_machine import AbstractPublisher, StateServer
+from mv.state_machine import AbstractPublisher, get_state_server
 
 
 class AsyncMockWSServer(AbstractPublisher):
@@ -18,7 +18,7 @@ class AsyncMockWSServer(AbstractPublisher):
     def __init__(self) -> None:
         self.messages = asyncio.Queue()
         self._closed = asyncio.Event()
-        self._server  = StateServer(self)
+        self._server = get_state_server(self)
         self._server.start_server()
 
     async def send(self, message):
@@ -49,7 +49,7 @@ class MockWSServer(AbstractPublisher):
     def __init__(self) -> None:
         self.messages = Queue()
         self._closed = Event()
-        self._server  = StateServer(self)
+        self._server = get_state_server(self)
         self._server.start_server()
 
     def wait_closed(self):
@@ -57,7 +57,7 @@ class MockWSServer(AbstractPublisher):
 
     def send(self, message):
         self.messages.put(message)
-    
+
     def recv(self):
         message = self.messages.get()
         if message == "STOP":
@@ -104,25 +104,28 @@ async def get_async_websocket():
     if _use_mock_ws:
         yield get_async_mock_ws_server()
     else:
-        async with websockets.connect("ws://localhost:8000") as websocket:
+        async with websockets.connect(get_ws_address()) as websocket:
             yield websocket
+
 
 @contextmanager
 def get_websocket():
     if _use_mock_ws:
         yield get_mock_ws_server()
     else:
-        with connect("ws://localhost:8000") as websocket:
+        with connect(get_ws_address()) as websocket:
             yield websocket
-            
-TestWebsocket =  websockets.WebSocketClientProtocol | AsyncMockWSServer
+
+
+TestWebsocket = websockets.WebSocketClientProtocol | AsyncMockWSServer
+
 
 class AsyncWSListener:
 
     def __init__(self, observer: AsynchAbstractObserver) -> None:
         self._observer = observer
         self._websocket = None
-        self._ws_ready =asyncio.Queue[bool | Exception]()
+        self._ws_ready = asyncio.Queue[bool | Exception]()
 
     @property
     def websocket(self):
@@ -133,10 +136,8 @@ class AsyncWSListener:
             await self._websocket.close()
 
     async def _wait_for_ws_ready(self):
-        if(result := await self._ws_ready.get()) is not True:
-            raise cast(Exception,result)
-
-
+        if (result := await self._ws_ready.get()) is not True:
+            raise cast(Exception, result)
 
     async def _listen(self):
         try:
@@ -153,8 +154,6 @@ class AsyncWSListener:
         except Exception as exception:
             await self._ws_ready.put(exception)
 
-
-    
     @asynccontextmanager
     async def listening(self):
         task = asyncio.create_task(self._listen())
@@ -169,7 +168,7 @@ class WSListener:
     def __init__(self, observer: AbstractObserver) -> None:
         self._observer = observer
         self._websocket = None
-        self._ws_ready =  Event()
+        self._ws_ready = Event()
         self._stop_signal = Event()
 
     @property
@@ -191,7 +190,9 @@ class WSListener:
                     return
                 self._observer.push_event(message)
 
-    def wait_for_ws_ready(self,):
+    def wait_for_ws_ready(
+        self,
+    ):
         if not self._ws_ready.wait(timeout=2):
             raise TimeoutError("Timed out waiting for ws to be ready")
 
@@ -200,18 +201,16 @@ class WSListener:
         if task.running():
             task.cancel()
         elif task.done():
-            task.result() 
-
+            task.result()
 
     @contextmanager
     def listening(self):
         with ThreadPoolExecutor(max_workers=1) as executor:
-            listening_task = executor.submit(self._listen)  
+            listening_task = executor.submit(self._listen)
             try:
                 self.wait_for_ws_ready()
             except TimeoutError:
-                self._cancel_task(listening_task)            
+                self._cancel_task(listening_task)
             yield self.websocket
             self.stop()
             listening_task.result()
-        

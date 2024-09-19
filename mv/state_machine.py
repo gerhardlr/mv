@@ -1,15 +1,17 @@
+from ._state_machine.state_machine import get_state_machine, StateMachineBusyError
 from ._state_machine.state_machine import (
-    get_state_machine,
-    StateMachineBusyError
-)
-from ._state_machine.state_server import (
     state_server,
     AbstractPublisher,
-    update_state,
-    StateServer,
-    reset_state
+    get_state_updater,
+    get_state_server,
+    State,
 )
-from ._state_machine.base import StateSubscriber, State
+from ._state_machine.base import (
+    StateSubscriber,
+    AbstractStateServer,
+    AbstractStateUpdater,
+)
+from ._state_machine.file_backend.file_stateupdater import InFileStateUpdater
 
 
 __all__ = [
@@ -17,10 +19,11 @@ __all__ = [
     "StateMachineBusyError",
     "state_server",
     "AbstractPublisher",
-    "update_state",
-    "StateServer",
+    "AbstractStateServer",
     "StateSubscriber",
     "State",
-    "reset_state"
-    
+    "get_state_updater",
+    "AbstractStateUpdater",
+    "get_state_server",
+    "InFileStateUpdater"
 ]

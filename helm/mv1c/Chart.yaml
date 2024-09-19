@@ -1,0 +1,6 @@
+apiVersion: v2
+name: mv1c
+description: "demonstrates deployment as a deployment with replica of 1 with connectivity via a NodePort service"
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
