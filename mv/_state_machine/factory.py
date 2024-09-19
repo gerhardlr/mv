@@ -8,12 +8,23 @@ from .base import (
     AbstractPublisher,
     AbstractStateUpdater,
     AbstractStateServer,
+    AbstractStateUpdater_Rev2,
 )
 from .file_backend import InFileStateUpdater
-from .inmem_backend import InMemStateUpdater
+from .inmem_backend import InMemStateUpdater, InMemStateUpdater_Rev2
 from .redis_backend import RedisStateUpdater, RedisStateServer
 from .state_server import StateServer
 from . import config
+
+
+class InMemFactory(AbstractFactory):
+
+    def get_state_updater(self) -> AbstractStateUpdater:
+        return InMemStateUpdater()
+
+    def get_state_server(self, publisher: AbstractPublisher) -> AbstractStateServer:
+        state_updater = self.get_state_updater()
+        return StateServer(publisher, state_updater)
 
 
 class DefaultFactory(AbstractFactory):
@@ -54,6 +65,15 @@ class Redisfactory(AbstractFactory):
 _factory: None | AbstractFactory = None
 
 
+def inject_factory(factory: AbstractFactory):
+    global _factory
+    _factory = factory
+
+
+def set_factory_for_memory_use_only():
+    inject_factory(InMemFactory())
+
+
 def _get_factory():
     global _factory
     if _factory is None:
@@ -72,3 +92,7 @@ def get_state_server(publisher: AbstractPublisher) -> AbstractStateServer:
 def get_state_updater() -> AbstractStateUpdater:
     factory = _get_factory()
     return factory.get_state_updater()
+
+
+def get_state_updater_rev2() -> AbstractStateUpdater_Rev2:
+    return InMemStateUpdater_Rev2()

@@ -1,6 +1,16 @@
 import abc
 from contextlib import contextmanager
-from typing import Any, Generator
+from typing import Any, Generator, Literal, TypedDict
+
+State = Literal["ON", "OFF", "BUSY"]
+ObsState = Literal[
+    "EMPTY", "RESOURCING", "IDLE", "CONFIGURING", "READY", "SCANNING", "BUSY"
+]
+
+
+class CombinedState(TypedDict):
+    state: State
+    obs_state: ObsState
 
 
 class StateSubscriber:
@@ -13,7 +23,7 @@ class StateSubscriber:
 class AbstractPublisher:
 
     @abc.abstractmethod
-    def publish(self, state):
+    def publish(self, state: State):
         """"""
 
 
@@ -21,16 +31,46 @@ class AbstractStateUpdater:
 
     @abc.abstractmethod
     @contextmanager
-    def update_state(self) -> Generator[dict[str, Any], Any, None]:
+    def update_state(
+        self,
+    ) -> Generator[dict[Literal["state", "obsbtate"], None], None, None]:
         raise NotImplementedError()
 
     @abc.abstractmethod
     @contextmanager
-    def atomic(self) -> Generator[None, Any, None]:
+    def atomic(self) -> Generator[None, State, None]:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def get_state(self) -> dict[str, Any]:
+    def get_state(self) -> dict[Literal["state"], State]:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def reset_state(self) -> None:
+        raise NotImplementedError()
+        """"""
+
+    @abc.abstractmethod
+    def state_machine_is_busy(self) -> bool:
+        """"""
+
+
+class AbstractStateUpdater_Rev2:
+
+    @abc.abstractmethod
+    @contextmanager
+    def update_state(
+        self,
+    ) -> Generator[CombinedState, None, None]:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    @contextmanager
+    def atomic(self) -> Generator[None, None, None]:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def get_state(self) -> CombinedState:
         raise NotImplementedError()
 
     @abc.abstractmethod

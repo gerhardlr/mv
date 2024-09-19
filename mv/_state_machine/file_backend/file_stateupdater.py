@@ -3,8 +3,7 @@ import json
 from pathlib import Path
 from threading import Lock
 from time import sleep
-from typing import Any
-from .base import StateUpdater
+from .base import StateUpdater, State
 from .state_control import (
     state_write_lock,
     cntrl_set_state_changed,
@@ -22,7 +21,7 @@ class InFileStateUpdater(StateUpdater):
                 dir.mkdir()
             self._write({})
 
-    def _write(self, state: dict[str, Any]):
+    def _write(self, state: dict[str, State]):
         with self._file_read_lock:
             with self._path.open("w") as file:
                 json.dump(state, file)

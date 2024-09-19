@@ -1,8 +1,8 @@
 from copy import deepcopy
-from typing import Any
 
+from .base import CombinedState
 
-_state: dict[str, Any] = {}
+_state: CombinedState = {}
 
 
 def get_state():
@@ -11,6 +11,6 @@ def get_state():
     return state_copy
 
 
-def set_state(state: dict[str, Any]):
+def set_state(state: CombinedState):
     global _state
     _state = state

@@ -1,3 +1,3 @@
-from ..stateupdater import StateUpdater
+from ..stateupdater import StateUpdater, State
 
-__all__ = ["StateUpdater"]
+__all__ = ["StateUpdater", "State"]
