@@ -1,40 +1,43 @@
 import abc
 import asyncio
+from typing import Tuple
 from fastapi.testclient import TestClient
 from .ws_listener import AsyncWSListener, WSListener
-from .base import AbstractObserver, AsynchAbstractObserver, AbstractProxy
+from .base import AbstractObserver, AbstractProxy, AsynchAbstractObserver
 
-from mv.state_machine import StateSubscriber, State
+from mv.state_machine import StateSubscriber, CombinedState, Attribute
 
 
 class ProxyObserver(AbstractObserver):
     def __init__(self) -> None:
-        self._subscribers: list[StateSubscriber] = []
+        self._subscribers: list[Tuple[StateSubscriber, Attribute]] = []
         # TODO add remove subscription (unsubcribe)
         self._index = -1
 
-    def push_event(self, message: State):
-        for subscriber in self._subscribers:
-            subscriber.push_event(message)
+    def push_event(self, data: CombinedState):
+        for subscriber, attribute in self._subscribers:
+            value = data[attribute]
+            subscriber.push_event(value)
 
-    def subscribe(self, subscriber: StateSubscriber):
-        self._subscribers.append(subscriber)
+    def subscribe(self, subscriber: StateSubscriber, attribute: Attribute = "state"):
+        self._subscribers.append((subscriber, attribute))
         self._index += 1
         return self._index
 
 
 class AsynchProxyObserver(AsynchAbstractObserver):
     def __init__(self) -> None:
-        self._subscribers: list[StateSubscriber] = []
+        self._subscribers: list[Tuple[StateSubscriber, Attribute]] = []
         # TODO add remove subscription (unsubcribe)
         self._index = -1
 
-    async def push_event(self, message: State):
-        for subscriber in self._subscribers:
-            subscriber.push_event(message)
+    async def push_event(self, data: CombinedState):
+        for subscriber, attribute in self._subscribers:
+            value = data[attribute]
+            subscriber.push_event(value)
 
-    def subscribe(self, subscriber: StateSubscriber):
-        self._subscribers.append(subscriber)
+    def subscribe(self, subscriber: StateSubscriber, attribute: Attribute = "state"):
+        self._subscribers.append((subscriber, attribute))
         self._index += 1
         return self._index
 
@@ -45,7 +48,7 @@ class BaseProxy(AbstractProxy):
         self._client = client
 
     @abc.abstractmethod
-    def subscribe(self, subscriber: StateSubscriber):
+    def subscribe(self, subscriber: StateSubscriber, attribute: Attribute = "state"):
         """"""
 
     def command_on(self, delay: float | None = None):
@@ -88,8 +91,8 @@ class Proxy(BaseProxy, WSListener):
         self._proxy_observer = ProxyObserver()
         WSListener.__init__(self, self._proxy_observer)
 
-    def subscribe(self, subscriber: StateSubscriber):
-        return self._proxy_observer.subscribe(subscriber)
+    def subscribe(self, subscriber: StateSubscriber, attribute: Attribute = "state"):
+        return self._proxy_observer.subscribe(subscriber, attribute)
 
 
 class AsyncProxy(BaseProxy, AsyncWSListener):
@@ -99,5 +102,5 @@ class AsyncProxy(BaseProxy, AsyncWSListener):
         self._proxy_observer = AsynchProxyObserver()
         AsyncWSListener.__init__(self, self._proxy_observer)
 
-    def subscribe(self, subscriber: StateSubscriber):
-        return self._proxy_observer.subscribe(subscriber)
+    def subscribe(self, subscriber: StateSubscriber, attribute: Attribute = "state"):
+        return self._proxy_observer.subscribe(subscriber, attribute)

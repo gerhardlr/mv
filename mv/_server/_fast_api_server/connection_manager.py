@@ -1,4 +1,5 @@
 import asyncio
+import json
 from fastapi import WebSocket
 
 from mv.state_machine import AbstractPublisher, get_state_server
@@ -25,7 +26,7 @@ class ConnectionManager(AbstractPublisher):
 
     def publish(self, state: dict):
         for connection in self.active_connections:
-            value = state["state"]
+            value = json.dumps(state)
             asyncio.run(connection.send_text(value))
 
 

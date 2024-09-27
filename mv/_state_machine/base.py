@@ -7,6 +7,8 @@ ObsState = Literal[
     "EMPTY", "RESOURCING", "IDLE", "CONFIGURING", "READY", "SCANNING", "BUSY"
 ]
 
+Attribute = Literal["state", "obs_state"]
+
 
 class CombinedState(TypedDict):
     state: State
@@ -23,39 +25,11 @@ class StateSubscriber:
 class AbstractPublisher:
 
     @abc.abstractmethod
-    def publish(self, state: State):
+    def publish(self, state: CombinedState):
         """"""
 
 
 class AbstractStateUpdater:
-
-    @abc.abstractmethod
-    @contextmanager
-    def update_state(
-        self,
-    ) -> Generator[dict[Literal["state", "obsbtate"], None], None, None]:
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    @contextmanager
-    def atomic(self) -> Generator[None, State, None]:
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def get_state(self) -> dict[Literal["state"], State]:
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def reset_state(self) -> None:
-        raise NotImplementedError()
-        """"""
-
-    @abc.abstractmethod
-    def state_machine_is_busy(self) -> bool:
-        """"""
-
-
-class AbstractStateUpdater_Rev2:
 
     @abc.abstractmethod
     @contextmanager

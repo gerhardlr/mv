@@ -4,6 +4,11 @@ import websockets
 from mv.client import AsyncMockWSServer, MockWSServer
 
 
+@pytest.fixture(autouse=True)
+def fxt_auto():
+    pass
+
+
 @pytest.mark.asyncio
 async def test_async_ws_local(async_websocket: AsyncMockWSServer):
     tx_message = "ON"

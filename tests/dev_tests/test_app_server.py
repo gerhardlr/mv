@@ -11,6 +11,11 @@ from mv.state_machine import State, StateSubscriber
 logger = logging.getLogger()
 
 
+@pytest.fixture(autouse=True)
+def fxt_auto():
+    pass
+
+
 @pytest.mark.asyncio
 async def test_command_twice(proxy: Proxy):
 

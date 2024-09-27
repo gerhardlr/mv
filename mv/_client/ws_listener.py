@@ -1,6 +1,7 @@
 import asyncio
 from concurrent.futures import Future, ThreadPoolExecutor
 from contextlib import asynccontextmanager, contextmanager
+import json
 from queue import Queue
 from threading import Event
 from typing import cast
@@ -71,8 +72,7 @@ class MockWSServer(AbstractPublisher):
         self._server.stop_server()
 
     def publish(self, state: dict):
-        value = state["state"]
-        self.messages.put(value)
+        self.messages.put(state)
 
 
 _use_mock_ws = True
@@ -146,7 +146,8 @@ class AsyncWSListener:
                 await self._ws_ready.put(True)
                 while True:
                     try:
-                        message = await websocket.recv()
+                        message_str = await websocket.recv()
+                        message = json.loads(message_str)
                     except Exception as exception:
                         await self._ws_ready.put(exception)
                         return
@@ -185,7 +186,8 @@ class WSListener:
             self._ws_ready.set()
             while True:
                 try:
-                    message = websocket.recv()
+                    message_str = websocket.recv()
+                    message = json.loads(message_str)
                 except Exception:
                     return
                 self._observer.push_event(message)

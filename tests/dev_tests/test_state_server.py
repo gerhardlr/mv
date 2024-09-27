@@ -7,7 +7,9 @@ from mv.state_machine import AbstractStateUpdater, InFileStateUpdater
 from .helpers import EventObserver
 
 
-def test_set_state(state_updater: AbstractStateUpdater, events_observer: EventObserver):
+def test_set_state(
+    state_updater: AbstractStateUpdater, events_observer: EventObserver
+):
     with state_updater.update_state() as state:
         state["foo"] = "bar"
     events_observer.wait_for_next_event()

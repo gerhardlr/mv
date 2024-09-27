@@ -1,3 +1,3 @@
-from .inmem_stateupdater import InMemStateUpdater, InMemStateUpdater_Rev2
+from .inmem_stateupdater import InMemStateUpdater
 
-__all__ = ["InMemStateUpdater", "InMemStateUpdater_Rev2"]
+__all__ = ["InMemStateUpdater"]

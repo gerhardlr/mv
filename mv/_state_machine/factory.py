@@ -6,12 +6,11 @@ import redis.asyncio as asyncio_redis
 from .base import (
     AbstractFactory,
     AbstractPublisher,
-    AbstractStateUpdater,
     AbstractStateServer,
-    AbstractStateUpdater_Rev2,
+    AbstractStateUpdater,
 )
 from .file_backend import InFileStateUpdater
-from .inmem_backend import InMemStateUpdater, InMemStateUpdater_Rev2
+from .inmem_backend import InMemStateUpdater
 from .redis_backend import RedisStateUpdater, RedisStateServer
 from .state_server import StateServer
 from . import config
@@ -19,7 +18,7 @@ from . import config
 
 class InMemFactory(AbstractFactory):
 
-    def get_state_updater(self) -> AbstractStateUpdater:
+    def get_state_updater(self) -> InMemStateUpdater:
         return InMemStateUpdater()
 
     def get_state_server(self, publisher: AbstractPublisher) -> AbstractStateServer:
@@ -29,7 +28,7 @@ class InMemFactory(AbstractFactory):
 
 class DefaultFactory(AbstractFactory):
 
-    def get_state_updater(self) -> AbstractStateUpdater:
+    def get_state_updater(self) -> InMemStateUpdater | InFileStateUpdater:
         if os.getenv("PERSIST_STATE_IN_FILE"):
             return InFileStateUpdater()
         return InMemStateUpdater()
@@ -92,7 +91,3 @@ def get_state_server(publisher: AbstractPublisher) -> AbstractStateServer:
 def get_state_updater() -> AbstractStateUpdater:
     factory = _get_factory()
     return factory.get_state_updater()
-
-
-def get_state_updater_rev2() -> AbstractStateUpdater_Rev2:
-    return InMemStateUpdater_Rev2()

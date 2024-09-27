@@ -73,7 +73,7 @@ async def fxt_async_websocket(settings: Settings):
         settings.websocket = websocket
         yield websocket
     else:
-        async with async_connect("ws://localhost:8000") as websocket:
+        async with async_connect("ws://localhost:30002") as websocket:
             settings.websocket = websocket
             yield websocket
 
@@ -85,7 +85,7 @@ async def fxt_websocket(settings: Settings):
         settings.websocket = websocket
         yield websocket
     else:
-        with connect("ws://localhost:8000") as websocket:
+        with connect("ws://localhost:30002") as websocket:
             settings.websocket = cast(ClientConnection, websocket)
             yield websocket
 
