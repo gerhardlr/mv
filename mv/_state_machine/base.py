@@ -1,6 +1,6 @@
 import abc
 from contextlib import contextmanager
-from typing import Any, Generator, Literal, TypedDict
+from typing import Generator, Literal, TypedDict
 
 State = Literal["ON", "OFF", "BUSY"]
 ObsState = Literal[
@@ -17,9 +17,26 @@ class CombinedState(TypedDict):
 
 class StateSubscriber:
 
+    def __init__(self) -> None:
+        self._init_state = None
+
     @abc.abstractmethod
-    def push_event(self, event: Any):
+    def push_event(self, event: CombinedState):
         """"""
+
+    def init(self, state: CombinedState):
+        """"""
+        self._init_state = state
+
+    @property
+    def init_state(self):
+        if self._init_state:
+            return self._init_state["state"]
+
+    @property
+    def init_obs_state(self):
+        if self._init_state:
+            return self._init_state["obs_state"]
 
 
 class AbstractPublisher:

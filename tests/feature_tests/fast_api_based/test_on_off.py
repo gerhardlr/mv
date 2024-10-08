@@ -1,52 +1,9 @@
-from queue import Queue
-from threading import Event
-import logging
-from requests import HTTPError
-from assertpy import assert_that
-from mv.client import Proxy
-from pytest_bdd import scenario, given, then
-
-from mv.state_machine import State, StateSubscriber
-from mv.client import RealClient, set_use_server_ws
-
-from ..conftest import AbstractSubscriber
-
-logger = logging.getLogger()
+from pytest_bdd import scenario
 
 
-class Subscriber(AbstractSubscriber, StateSubscriber):
+# from .conftest
 
-    def __init__(self) -> None:
-        self._state_on = Event()
-        self._events = Queue()
-        self._state_off = Event()
-
-    def push_event(self, event: State):
-        if event == "ON":
-            self._state_on.set()
-        elif event == "OFF":
-            self._state_off.set()
-        self._events.put(event)
-
-    def wait_for_on(self):
-        self._state_on.wait()
-
-    def wait_for_off(self):
-        self._state_off.wait()
-
-
-# --- Givens ---
-
-
-@given("a running state machhine on a server", target_fixture="setup")
-def given_a_running_state_machhine_on_a_server():
-    """"""
-    client = RealClient()
-    proxy = Proxy(client)
-    subscriber = Subscriber()
-    set_use_server_ws()
-    with proxy.listening():
-        yield proxy, subscriber
+# @given("a running state machine on a server")
 
 
 # from ..conftest
@@ -70,6 +27,10 @@ def given_a_running_state_machhine_on_a_server():
 
 # --- Thens ---
 
+# from .conftest
+
+# @then("the server should reject the command")
+
 # from ..conftest
 
 # @then("the server should first be busy")
@@ -77,11 +38,6 @@ def given_a_running_state_machhine_on_a_server():
 # @then("the server should be on")
 
 # @then("the server should be off")
-
-
-@then("the server should reject the command")
-def the_server_should_reject_the_command(failed_result: None | HTTPError):
-    assert_that(failed_result).is_instance_of(HTTPError)
 
 
 @scenario("test_on_off.feature", "Switch System On")

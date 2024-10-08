@@ -18,6 +18,7 @@ class Subscriber(AbstractProxy):
     def __init__(self) -> None:
         self._on = Event()
         self._off = Event()
+        self._busy = Event()
         self._on.clear()
         self._off.clear()
         self.current: None | str = None
@@ -38,10 +39,14 @@ class Subscriber(AbstractProxy):
                 self._on.set()
             elif value == "OFF":
                 self._off.set()
-    
-        
+            elif value == "BUSY":
+                self._busy.set()
+       
     def wait_for_on(self):
         self._on.wait()
+
+    def wait_for_busy(self):
+        self._busy.wait()
 
     def wait_for_off(self):
         self._off.wait()
@@ -50,7 +55,7 @@ class Subscriber(AbstractProxy):
 # --- Givens ---
 
 
-@given("a running state machhine on a server", target_fixture="setup")
+@given("a running state machine on a server", target_fixture="setup")
 def given_a_running_state_machhine_on_a_server():
     proxy = TangoProxy()
     subscriber = Subscriber()

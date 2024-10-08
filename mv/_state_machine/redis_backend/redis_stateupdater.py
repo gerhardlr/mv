@@ -1,6 +1,6 @@
 from contextlib import asynccontextmanager, contextmanager
 import json
-from typing import cast
+from typing import Any, cast
 import redis
 from redis.lock import Lock as RedisLock
 import redis.asyncio as asyncio_redis
@@ -32,9 +32,9 @@ class RedisStateUpdater(AbstractStateUpdater):
             with self._state_write_lock:
                 yield
 
-    def _publish_state_changed(self):
+    def _publish_state_changed(self, state: Any):
         if isinstance(self._redis_client, fakeredis.FakeRedis):
-            cntrl_set_state_changed()
+            cntrl_set_state_changed(state)
         else:
             self._redis_client.publish("state_control_signals", "STATE_CHANGED")
 
@@ -53,7 +53,7 @@ class RedisStateUpdater(AbstractStateUpdater):
             yield state
             state_str = json.dumps(state)
             self._redis_client.set("state", state_str)
-            self._publish_state_changed()
+            self._publish_state_changed(state)
 
     @asynccontextmanager
     async def async_update_state(self):
@@ -70,7 +70,7 @@ class RedisStateUpdater(AbstractStateUpdater):
             yield state
             state_str = json.dumps(state)
             await self._async_redis_client.set("state", state_str)
-            self._publish_state_changed()
+            self._publish_state_changed(state)
 
     @contextmanager
     def atomic(self):

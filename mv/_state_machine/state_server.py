@@ -16,9 +16,8 @@ class StateServer(AbstractStateServer):
     def _server(self):
         while True:
             self._started_flag.set()
-            signal = get_state_control_signals()
+            signal, state = get_state_control_signals()
             if signal == "STATE_CHANGED":
-                state = self._updater.get_state()
                 self._publisher.publish(state)
             else:
                 self._started_flag.clear()

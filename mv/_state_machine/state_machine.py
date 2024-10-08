@@ -52,9 +52,9 @@ class CommandNotAllowed(Exception):
 def is_allowed(method: Callable[Concatenate["StateMachine", P], T]) -> Callable[P, T]:
 
     def wrapper(self: "StateMachine", *args: P.args, **kwds: P.kwargs) -> T:
-        if method.__name__ in self.allowed_commands:
-            return method(self, *args, **kwds)
         method_name = get_name(method)
+        if method_name in self.allowed_commands:
+            return method(self, *args, **kwds)
         raise CommandNotAllowed(
             f"{method_name} not allowed when obs_state is {self.obs_state}"
         )
@@ -110,7 +110,7 @@ def must_be_on(method: Callable[Concatenate["StateMachine", P], T]) -> Callable[
 class StateMachine:
 
     _allowed_commands: dict[ObsState | None | State, list[str]] = {
-        None: ["switch_on"],
+        None: ["switch_on", "switch_off"],
         "OFF": ["switch_on"],
         "EMPTY": ["switch_off", "assign_resources"],
         "RESOURCING": ["abort"],
@@ -127,6 +127,12 @@ class StateMachine:
         self._state: None | State = None
         self._obs_state: None | ObsState = None
         self._updater = get_state_updater()
+
+    def reset_state(self):
+        self._updater.reset_state()
+
+    def wait_busy(self):
+        assert self._busy_flag.wait(100), "Timeout after 1 second waiting for state to be BUSY"
 
     @property
     def allowed_commands(self) -> list[str]:
@@ -198,8 +204,8 @@ class StateMachine:
                 self._obs_state = "BUSY"
             with self._update(delay):
                 self._obs_state = "CONFIGURING"
-            resourcing_delay = config.get("delay") if config else None
-            with self._update(resourcing_delay):
+            confguringing_delay = config.get("delay") if config else None
+            with self._update(confguringing_delay):
                 self._obs_state = "READY"
 
     @ignore_if_in_obs_state("IDLE")
@@ -227,9 +233,6 @@ class StateMachine:
             with self._update(resourcing_delay):
                 self._obs_state = "READY"
 
-    async def async_switch_on(self, delay: float | None = None):
-        await asyncio.to_thread(self.switch_on, delay)
-
     @ignore_if_in_state("OFF")
     @check_busy
     @is_allowed
@@ -239,9 +242,7 @@ class StateMachine:
                 self._state = "BUSY"
             with self._update(delay):
                 self._state = "OFF"
-
-    async def async_switch_off(self, delay: float | None = None):
-        await asyncio.to_thread(self.switch_off, delay)
+                self._obs_state = None
 
     @property
     def state(self):
@@ -256,17 +257,58 @@ class StateMachine:
     @property
     def busy(self):
         return (
-            self._updater.state_machine_is_busy()
-            or self.state == "BUSY"
-            or self._obs_state == "BUSY"
+            self._updater.state_machine_is_busy() or
+            self.state == "BUSY" or self._obs_state == "BUSY"
         )
 
     def assert_ready(self):
         if self._updater.state_machine_is_busy():
             raise StateMachineBusyError("machine is busy and can not be commanded")
 
+    def assert_method_allowed(self, method: Callable[Concatenate["StateMachine", P], T]):
+        method_name = get_name(method)
+        if method_name in self.allowed_commands:
+            return
+        raise CommandNotAllowed(
+            f"{method_name} not allowed when obs_state is {self.obs_state}"
+        )
+
+
+class AsyncStateMachine(StateMachine):
+
+    async def async_switch_off(self, delay: float | None = None):
+        await asyncio.to_thread(self.switch_off, delay)
+
+    async def async_switch_on(self, delay: float | None = None):
+        await asyncio.to_thread(self.switch_on, delay)
+
+    async def async_scan(
+        self, delay: float | None = None, config: dict[str, Any] = None
+    ):
+        await asyncio.to_thread(self.scan, delay, config)
+
+    async def async_clear_config(self, delay: float | None = None):
+        await asyncio.to_thread(self.clear_config, delay)
+
+    async def async_configure(
+        self, delay: float | None = None, config: dict[str, Any] = None
+    ):
+        await asyncio.to_thread(self.configure, delay, config)
+
+    async def async_release_resources(
+        self, delay: float | None = None, config: dict[str, Any] = None
+    ):
+        await asyncio.to_thread(self.release_resources, delay, config)
+
+    async def async_assign_resources(
+        self, delay: float | None = None, config: dict[str, Any] = None
+    ):
+        await asyncio.to_thread(self.assign_resources, delay, config)
+
 
 _state_machine: None | StateMachine = None
+
+_async_state_machine: None | AsyncStateMachine = None
 
 
 def get_state_machine():
@@ -276,9 +318,22 @@ def get_state_machine():
     return _state_machine
 
 
+def get_async_state_machine():
+    global _async_state_machine
+    if _async_state_machine is None:
+        _async_state_machine = AsyncStateMachine()
+    return _async_state_machine
+
+
 def reset_state_machine():
     global _state_machine
-    _state_machine = None
+    _state_machine = StateMachine()
+    _state_machine.reset_state()
+
+
+def reset_async_state_machine():
+    global _async_state_machine
+    _async_state_machine = None
 
 
 @contextmanager

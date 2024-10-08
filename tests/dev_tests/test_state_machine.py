@@ -127,7 +127,10 @@ def fxt_use_memory_state_machine():
 @pytest.fixture(name="state_machine")
 def fxt_state_machine():
     reset_state_machine()
-    return get_state_machine()
+    state_machine = get_state_machine()
+    assert_that(state_machine.state).is_equal_to(None)
+    assert_that(state_machine.obs_state).is_equal_to(None)
+    return state_machine
 
 
 @pytest.fixture(name="ticker")
@@ -144,22 +147,24 @@ def fxt_use_fake_time(ticker: FakeTicker):
         yield
 
 
-
 @pytest.mark.usefixtures("use_memory_state_machine")
 def test_switch_on(state_machine: StateMachine):
     state_machine.switch_on()
     assert_that(state_machine.state).is_equal_to("ON")
+
 
 @pytest.fixture(name="set on")
 def fxt_set_on(state_machine: StateMachine):
     state_machine.switch_on()
     assert_that(state_machine.state).is_equal_to("ON")
 
+
 @pytest.mark.usefixtures("set on")
 @pytest.mark.usefixtures("use_memory_state_machine")
 def test_switch_off(state_machine: StateMachine):
     state_machine.switch_off()
     assert_that(state_machine.state).is_equal_to("OFF")
+    assert_that(state_machine.obs_state).is_equal_to(None)
 
 
 @pytest.mark.usefixtures("set on")
@@ -179,6 +184,7 @@ def fxt_on_state_machine(state_machine: StateMachine):
 def fxt_assign_resources(on_state_machine: StateMachine):
     on_state_machine.assign_resources()
     assert_that(on_state_machine.obs_state).is_equal_to("IDLE")
+
 
 @pytest.fixture(name="idle_state_machine")
 def fxt_idle_state_machine(on_state_machine: StateMachine):
@@ -216,6 +222,7 @@ def test_assign_resources_with_delay(state_machine: StateMachine, ticker: FakeTi
         ticker.tock()
     assert_that(state_machine.obs_state).is_equal_to("IDLE")
 
+
 @pytest.mark.usefixtures("assign resources")
 @pytest.mark.usefixtures("use_memory_state_machine")
 @pytest.mark.usefixtures("use_fake_time")
@@ -231,6 +238,7 @@ def test_release_resources_with_delay(state_machine: StateMachine, ticker: FakeT
         assert_that(state_machine.obs_state).is_equal_to("RESOURCING")
         ticker.tock()
     assert_that(state_machine.obs_state).is_equal_to("EMPTY")
+
 
 @pytest.mark.usefixtures("assign resources")
 @pytest.mark.usefixtures("use_memory_state_machine")
@@ -319,8 +327,6 @@ def test_ignore_clear_configure(state_machine: StateMachine, ticker: FakeTicker)
 
 
 def test_not_allowed(state_machine: StateMachine):
-    with pytest.raises(CommandNotAllowed):
-        state_machine.switch_off()
     with pytest.raises(CommandNotAllowed):
         state_machine.assign_resources()
     with pytest.raises(CommandNotAllowed):

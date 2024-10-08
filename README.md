@@ -23,7 +23,7 @@ poetry install
 For dev mode (i.e. automatic restart server after a file has been saved)
 
 ```
-poetry run fastapi dev mv/server
+poetry run fastapi dev mv/server.py --port 30002
 ```
 
 To run the server as for default production

@@ -54,7 +54,7 @@ class InFileStateUpdater(StateUpdater):
             # we copy the state so that it can be red statically whilst being updated
             yield state
             self._write(state)
-            cntrl_set_state_changed()
+            cntrl_set_state_changed(state)
 
     @asynccontextmanager
     async def async_update_state(self):
@@ -67,7 +67,7 @@ class InFileStateUpdater(StateUpdater):
             # we copy the state so that it can be red statically whilst being updated
             yield state
             self._write(state)
-            cntrl_set_state_changed()
+            cntrl_set_state_changed(state)
 
     @contextmanager
     def atomic(self):

@@ -6,6 +6,7 @@ from ._state_machine.state_machine import (
     State,
     reset_state_machine,
     get_state_machine,
+    get_async_state_machine,
     StateMachine,
     StateMachineBusyError,
     CommandNotAllowed,
@@ -39,5 +40,6 @@ __all__ = [
     "reset_state_machine",
     "CombinedState",
     "Attribute",
-    "CommandNotAllowed"
+    "CommandNotAllowed",
+    "get_async_state_machine"
 ]
