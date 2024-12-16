@@ -24,7 +24,7 @@ class Subscriber(AbstractProxy):
         self.current: None | str = None
 
     def push_event(self, event: EventData):
-        logging.info(event)
+        # logging.info(event)
         if event is None:
             return
         if event.err:
@@ -32,6 +32,8 @@ class Subscriber(AbstractProxy):
             return
         if event.attr_value:
             value = event.attr_value.value
+            logging.info(f"got value from pub sub event: {value}")
+            logging.info(event)
             if self.current is None:
                 self.current = value
                 return
@@ -41,7 +43,7 @@ class Subscriber(AbstractProxy):
                 self._off.set()
             elif value == "BUSY":
                 self._busy.set()
-       
+
     def wait_for_on(self):
         self._on.wait()
 

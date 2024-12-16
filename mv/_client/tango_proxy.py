@@ -1,7 +1,7 @@
 import os
 from typing import Any
 from tango import DeviceProxy, EventType
-from .base import AbstractProxy
+from .base import AbstractProxy, Attribute
 
 
 def get_tango_proxy(dev_name: str):
@@ -25,7 +25,7 @@ class TangoProxy(AbstractProxy):
     def ping(self):
         return self._proxy.ping()
 
-    def subscribe(self, subscriber: Any) -> int:
+    def subscribe(self, subscriber: Any, attribute: Attribute = "state") -> int:
         sub_id = self._proxy.subscribe_event(
             "agg_state", EventType.CHANGE_EVENT, subscriber
         )

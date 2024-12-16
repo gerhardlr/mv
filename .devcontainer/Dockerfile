@@ -1,6 +1,9 @@
 FROM mcr.microsoft.com/vscode/devcontainers/python:3.11-bookworm
 
+RUN apt-get update && apt-get install telnet -y
+
 RUN pipx install poetry
+
 
 ENV PATH=/home/vscode/.local/bin/:$PATH
 

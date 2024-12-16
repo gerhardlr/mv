@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    meta.helm.sh/release-name: mvtango
+    meta.helm.sh/release-namespace: default
+  creationTimestamp: "2024-12-16T15:27:44Z"
+  labels:
+    app.kubernetes.io/managed-by: Helm
+  name: mvtango
+  namespace: default
+  resourceVersion: "4293"
+  uid: 6d15aa65-25e1-4456-ad1a-8af1d336a387
+spec:
+  clusterIP: 10.104.73.155
+  clusterIPs:
+    - 10.104.73.155
+  externalTrafficPolicy: Cluster
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+    - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+    - name: port1
+      nodePort: 30002
+      port: 30003
+      protocol: TCP
+      targetPort: 30002
+    - name: port2
+      nodePort: 30003
+      port: 30003
+      protocol: TCP
+      targetPort: 30003
+    - name: port3
+      nodePort: 30004
+      port: 30004
+      protocol: TCP
+      targetPort: 30004
+  selector:
+    app.kubernetes.io/name: mvtango
+  sessionAffinity: None
+  type: NodePort
+status:
+  loadBalancer: {}

@@ -8,9 +8,20 @@ spec:
   type: NodePort
   ports:
     - protocol: TCP
-      port: 80
+      name: port1
+      port: 30002
       nodePort: 30002
       targetPort: 30002
+    - protocol: TCP
+      name: port2
+      nodePort: 30003
+      port: 30003
+      targetPort: 30003
+    - protocol: TCP
+      name: port3
+      port: 30004
+      nodePort: 30004
+      targetPort: 30004
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -39,8 +50,19 @@ spec:
               value: "6379"
             - name: REDIS_HOST
               value: redis
-          command: ['sh', '-c', 'serve_tango app -nodb --dlist mv/statemachine/1 -port 30002']
+            - name: TANGO_ZMQ_EVENT_PORT
+              value: "30003"
+            - name: TANGO_ZMQ_HEARTBEAT_PORT
+              value: "30004"
+          command: ['sh', '-c', 'serve_tango app -nodb -dlist mv/statemachine/1 -port 30002']
         - name: ping
+          env:
+            - name: USE_REDIS_FOR_STATE_SERVER
+              value: "true"
+            - name: REDIS_PORT
+              value: "6379"
+            - name: REDIS_HOST
+              value: redis
           imagePullPolicy: Never
           image: local/mv:latest
           command: ['sh', '-c', 'sleep infinity']
@@ -56,10 +78,16 @@ spec:
     - name: ping
       imagePullPolicy: Never
       env:
+        - name: USE_REDIS_FOR_STATE_SERVER
+          value: "true"
+        - name: REDIS_PORT
+          value: "6379"
+        - name: REDIS_HOST
+          value: redis
         - name: SERVER_IP
           value: mvtango
         - name: SERVER_PORT
-          value: "80"
+          value: "30002"
       image: local/mv:latest
       command: ['sh', '-c', 'sleep infinity']
 
