@@ -3,14 +3,19 @@ from assertpy import assert_that
 import logging
 
 from pytest_bdd import scenario, given, then
-from tango import EventData
+from tango import EventData, DeviceProxy
 from PyTango import DevFailed
 
 from mv.client import TangoProxy
 
-from ..conftest import AbstractProxy
+from ..conftest import AbstractProxy, GlobalSettings
 
 logger = logging.getLogger()
+
+
+class WaitTimeout(Exception):
+
+    pass
 
 
 class Subscriber(AbstractProxy):
@@ -22,21 +27,35 @@ class Subscriber(AbstractProxy):
         self._on.clear()
         self._off.clear()
         self.current: None | str = None
+        self._event_messages: list[str] = []
+        self._first_event = True
+        self._device = None | DeviceProxy
+
+    def _log_event_message(self, message: str):
+        self._event_messages.append(message)
+
+    def print_event_messages(self):
+        logging.info("Events:\n")
+        logging.info("\n".join(self._event_messages))
 
     def push_event(self, event: EventData):
-        # logging.info(event)
         if event is None:
             return
         if event.err:
-            logging.info(f"Errors received in event from tango server: {event.errors}")
+            self._log_event_message(
+                f"Errors received in event from tango server: {event.errors}"
+            )
             return
         if event.attr_value:
             value = event.attr_value.value
-            logging.info(f"got value from pub sub event: {value}")
-            logging.info(event)
             if self.current is None:
                 self.current = value
+                self._device = event.device
+                self._log_event_message(
+                    f"got FIRST value from pub sub event: value = {value}"
+                )
                 return
+            self._log_event_message(f"got value from pub sub event: value = {value}")
             if value == "ON":
                 self._on.set()
             elif value == "OFF":
@@ -44,22 +63,46 @@ class Subscriber(AbstractProxy):
             elif value == "BUSY":
                 self._busy.set()
 
-    def wait_for_on(self):
-        self._on.wait()
+    def wait_for_on(self, timeout: bool | None = None):
+        if self._on.wait(timeout):
+            return
+        self.print_event_messages()
+        current_state = self._device.agg_state
+        raise WaitTimeout(
+            f"timed out waiting for on after {timeout} seconds;"
+            f" current state = {current_state}"
+        )
 
-    def wait_for_busy(self):
-        self._busy.wait()
+    def wait_for_busy(self, timeout: bool | None = None):
+        if self._busy.wait(timeout):
+            return
+        self.print_event_messages()
+        current_state = self._device.agg_state
+        raise WaitTimeout(
+            f"timed out waiting for busy after {timeout} seconds;"
+            f" current state = {current_state}"
+        )
 
-    def wait_for_off(self):
-        self._off.wait()
+    def wait_for_off(self, timeout: bool | None = None):
+        if self._off.wait(timeout):
+            return
+        self.print_event_messages()
+        current_state = self._device.agg_state
+        raise WaitTimeout(
+            f"timed out waiting for off after {timeout} seconds;"
+            f" current state = {current_state}"
+        )
 
 
 # --- Givens ---
 
 
 @given("a running state machine on a server", target_fixture="setup")
-def given_a_running_state_machhine_on_a_server():
+def given_a_running_state_machine_on_a_server(global_settings: GlobalSettings):
+    global_settings.wait_for_timeout = 9.5
+    # global_settings.command_delay = 9
     proxy = TangoProxy()
+    logger.info(f"Using device {proxy.dev_name} on address: {proxy.tango_address}")
     subscriber = Subscriber()
     return proxy, subscriber
 

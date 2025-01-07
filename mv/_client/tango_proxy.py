@@ -9,8 +9,9 @@ def get_tango_proxy(dev_name: str):
     port = os.getenv("SERVER_PORT", "30002")
     db = os.getenv("TANGO_DB")
     if db is None:
-        proxy = DeviceProxy(f"tango://{host}:{port}/{dev_name}#dbase=no")
-        return proxy
+        address = f"tango://{host}:{port}/{dev_name}#dbase=no"
+        proxy = DeviceProxy(address)
+        return proxy, address
     else:
         raise NotImplementedError("Tango with DB not yet implemented")
 
@@ -19,8 +20,14 @@ class TangoProxy(AbstractProxy):
     dev_name = "mv/statemachine/1"
 
     def __init__(self) -> None:
-        self._proxy = get_tango_proxy(self.dev_name)
-        self._proxy.ping()
+        self._proxy, address = get_tango_proxy(self.dev_name)
+        try:
+            self._proxy.ping()
+            self.tango_address = address
+        except Exception as exception:
+            raise Exception(
+                f"Unable to connect using address = {address}"
+            ) from exception
 
     def ping(self):
         return self._proxy.ping()

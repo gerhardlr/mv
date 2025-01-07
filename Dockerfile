@@ -24,6 +24,10 @@ COPY mv mv
 
 RUN poetry install
 
+COPY --chmod=777 scripts/check_tango_zmq_event_port.sh /root/app/.venv/bin/check_tango_zmq_event_port
+
+COPY --chmod=777 scripts/check_tango_zmq_heartbeat_port.sh /root/app/.venv/bin/check_tango_zmq_heartbeat_port
+
 ENV PATH=/root/app/.venv/bin/:$PATH
 
 

@@ -43,6 +43,16 @@ def context(stack: ExitStack, session_stack: ExitStack):
     return context
 
 
+class GlobalSettings:
+    wait_for_timeout: float | None = None
+    command_delay: float | None = None
+
+
+@pytest.fixture(name="global_settings")
+def fxt_global_settings():
+    return GlobalSettings()
+
+
 class TelescopeController:
 
     def __init__(self, stack: StackableContext):
@@ -122,35 +132,35 @@ class AbstractSubscriber:
         """"""
 
     @abc.abstractmethod
-    def wait_for_on(self):
+    def wait_for_on(self, timeout: float | None = None):
         """"""
 
     @abc.abstractmethod
-    def wait_for_busy(self):
+    def wait_for_busy(self, timeout: float | None = None):
         """"""
 
     @abc.abstractmethod
-    def wait_for_resourcing(self):
+    def wait_for_resourcing(self, timeout: float | None = None):
         """"""
 
     @abc.abstractmethod
-    def wait_for_idle(self):
+    def wait_for_idle(self, timeout: float | None = None):
         """"""
 
     @abc.abstractmethod
-    def wait_for_ready(self):
+    def wait_for_ready(self, timeout: float | None = None):
         """"""
 
     @abc.abstractmethod
-    def wait_for_configuring(self):
+    def wait_for_configuring(self, timeout: float | None = None):
         """"""
 
     @abc.abstractmethod
-    def wait_for_empty(self):
+    def wait_for_empty(self, timeout: float | None = None):
         """"""
 
     @abc.abstractmethod
-    def wait_for_off(self):
+    def wait_for_off(self, timeout: float | None = None):
         """"""
 
     @abc.abstractmethod
@@ -234,10 +244,11 @@ def a_machine_that_is_in_the_ready_state(
 
 @when("I command it to switch on", target_fixture="command_results")
 def when_I_command_it_to_switch_on(
-    proxy: AbstractProxy, subscriber: AbstractSubscriber
+    proxy: AbstractProxy, subscriber: AbstractSubscriber,
+    global_settings: GlobalSettings
 ):
     proxy.subscribe(subscriber, "state")
-    proxy.command_on()
+    proxy.command_on(global_settings.command_delay)
     return (proxy, subscriber)
 
 
@@ -400,10 +411,11 @@ def when_I_command_it_again_to_configure(proxy: AbstractProxy):
     target_fixture="command_results",
 )
 def then_machine_should_first_go_into_resourcing_state(
-    command_results: tuple[AbstractProxy, AbstractSubscriber]
+    command_results: tuple[AbstractProxy, AbstractSubscriber],
+    global_settings: GlobalSettings,
 ):
     _, subscriber = command_results
-    subscriber.wait_for_resourcing()
+    subscriber.wait_for_resourcing(global_settings.wait_for_timeout)
     assert_that(subscriber.first_obs_state_event()).is_equal_to("RESOURCING")
     return _, subscriber
 
@@ -413,10 +425,11 @@ def then_machine_should_first_go_into_resourcing_state(
     target_fixture="command_results",
 )
 def then_machine_should_first_go_into_configuring_state(
-    command_results: tuple[AbstractProxy, AbstractSubscriber]
+    command_results: tuple[AbstractProxy, AbstractSubscriber],
+    global_settings: GlobalSettings,
 ):
     _, subscriber = command_results
-    subscriber.wait_for_configuring()
+    subscriber.wait_for_configuring(global_settings.wait_for_timeout)
     assert_that(subscriber.first_obs_state_event()).is_equal_to("CONFIGURING")
     return _, subscriber
 
@@ -426,10 +439,11 @@ def then_machine_should_first_go_into_configuring_state(
     target_fixture="command_results",
 )
 def then_the_machine_should_go_into_idle_state(
-    command_results: tuple[AbstractProxy, AbstractSubscriber]
+    command_results: tuple[AbstractProxy, AbstractSubscriber],
+    global_settings: GlobalSettings,
 ):
     proxy, subscriber = command_results
-    subscriber.wait_for_idle()
+    subscriber.wait_for_idle(global_settings.wait_for_timeout)
     assert_that(subscriber.next_obs_state_event()).is_equal_to("IDLE")
     assert_that(proxy.obs_state).is_equal_to("IDLE")
 
@@ -439,10 +453,11 @@ def then_the_machine_should_go_into_idle_state(
     target_fixture="command_results",
 )
 def then_the_machine_should_be_in_idle_state(
-    command_results: tuple[AbstractProxy, AbstractSubscriber]
+    command_results: tuple[AbstractProxy, AbstractSubscriber],
+    global_settings: GlobalSettings,
 ):
     proxy, subscriber = command_results
-    subscriber.wait_for_idle()
+    subscriber.wait_for_idle(global_settings.wait_for_timeout)
     assert_that(proxy.obs_state).is_equal_to("IDLE")
 
 
@@ -451,10 +466,11 @@ def then_the_machine_should_be_in_idle_state(
     target_fixture="command_results",
 )
 def then_the_machine_should_go_into_ready_state(
-    command_results: tuple[AbstractProxy, AbstractSubscriber]
+    command_results: tuple[AbstractProxy, AbstractSubscriber],
+    global_settings: GlobalSettings,
 ):
     proxy, subscriber = command_results
-    subscriber.wait_for_ready()
+    subscriber.wait_for_ready(global_settings.wait_for_timeout)
     assert_that(subscriber.next_obs_state_event()).is_equal_to("READY")
     assert_that(proxy.obs_state).is_equal_to("READY")
 
@@ -464,36 +480,40 @@ def then_the_machine_should_go_into_ready_state(
     target_fixture="command_results",
 )
 def then_the_machine_should_go_into_empty_state(
-    command_results: tuple[AbstractProxy, AbstractSubscriber]
+    command_results: tuple[AbstractProxy, AbstractSubscriber],
+    global_settings: GlobalSettings,
 ):
     proxy, subscriber = command_results
-    subscriber.wait_for_empty()
+    subscriber.wait_for_empty(global_settings.wait_for_timeout)
     assert_that(subscriber.next_obs_state_event()).is_equal_to("EMPTY")
     assert_that(proxy.obs_state).is_equal_to("EMPTY")
 
 
 @then("the server should first be busy")
 def then_the_server_should_first_be_on(
-    command_results: tuple[AbstractProxy, AbstractSubscriber]
+    command_results: tuple[AbstractProxy, AbstractSubscriber],
+    global_settings: GlobalSettings,
 ):
     proxy, subscriber = command_results
-    subscriber.wait_for_busy()
+    subscriber.wait_for_busy(global_settings.wait_for_timeout)
     assert_that(proxy.state).is_equal_to("BUSY")
 
 
 @then("the server should be on")
 def then_the_server_should_be_on(
-    command_results: tuple[AbstractProxy, AbstractSubscriber]
+    command_results: tuple[AbstractProxy, AbstractSubscriber],
+    global_settings: GlobalSettings,
 ):
     proxy, subscriber = command_results
-    subscriber.wait_for_on()
+    subscriber.wait_for_on(global_settings.wait_for_timeout)
     assert_that(proxy.state).is_equal_to("ON")
 
 
 @then("the server should be off")
 def then_the_server_should_be_off(
-    command_results: tuple[AbstractProxy, AbstractSubscriber]
+    command_results: tuple[AbstractProxy, AbstractSubscriber],
+    global_settings: GlobalSettings,
 ):
     proxy, subscriber = command_results
-    subscriber.wait_for_off()
+    subscriber.wait_for_off(global_settings.wait_for_timeout)
     assert_that(proxy.state).is_equal_to("OFF")

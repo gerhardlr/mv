@@ -50,10 +50,10 @@ spec:
               value: "6379"
             - name: REDIS_HOST
               value: redis
-            - name: TANGO_ZMQ_EVENT_PORT
-              value: "30003"
-            - name: TANGO_ZMQ_HEARTBEAT_PORT
-              value: "30004"
+           # - name: TANGO_ZMQ_EVENT_PORT
+           #   value: "30003"
+           # - name: TANGO_ZMQ_HEARTBEAT_PORT
+           #   value: "30004"
           command: ['sh', '-c', 'serve_tango app -nodb -dlist mv/statemachine/1 -port 30002']
         - name: ping
           env:
